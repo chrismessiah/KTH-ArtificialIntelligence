@@ -13,18 +13,18 @@ public class Main {
     // 4 3 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.2 0.6 0.2
     // 1 4 0.0 0.0 0.0 1.0
 
-    public static void printArray(String[] array) {
+    public static void printArray(float[] array) {
         System.out.println(Arrays.toString(array));
     }
 
-    public static void printMatrix(String[][] matrix) {
+    public static void printMatrix(float[][] matrix) {
         for (int i=0;i < matrix.length; i++) {
             printArray(matrix[i]);
         }
         System.out.println("");
     }
 
-    public static String[][] getInput(BufferedReader input) throws IOException {
+    public static float[][] getInput(BufferedReader input) throws IOException {
 
         String inputData = input.readLine();
         String[] inputParts = inputData.split(" ");
@@ -32,12 +32,12 @@ public class Main {
         int rows = Integer.parseInt(inputParts[0]);
         int columns = Integer.parseInt(inputParts[1]);
         String[] inputVector = Arrays.copyOfRange(inputParts, 2, inputParts.length);
-        String[][] matrix = new String[rows][columns];
+        float[][] matrix = new float[rows][columns];
 
         int k=0;
         for (int i=0; i<rows; i++) {
             for (int j=0; j<columns; j++) {
-                matrix[i][j] = inputVector[k];
+                matrix[i][j] = Float.parseFloat(inputVector[k]);
                 k+=1;
             }
         }
@@ -46,9 +46,9 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
-        String[][] aMatrix = getInput(stdin);
-        String[][] bMatrix = getInput(stdin);
-        String[][] piMatrix = getInput(stdin);
+        float[][] aMatrix = getInput(stdin);
+        float[][] bMatrix = getInput(stdin);
+        float[][] piMatrix = getInput(stdin);
         //printMatrix(aMatrix);
         //printMatrix(bMatrix);
         //printMatrix(piMatrix);

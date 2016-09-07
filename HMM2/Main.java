@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Arrays;
+import java.lang.Math;
 
 public class Main {
 
@@ -182,13 +183,40 @@ public class Main {
         }
         return vector;
     }
+    
+    
+    // rounds double to specified decimal (unlike Math.round)
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
+    
+    public static double sumVector(double[][] vector) {
+        double sum = 0;
+        for (int i=0; i<vector[0].length; i++) {
+            sum += vector[0][i];
+        }
+        return sum;
+    }
+    
 
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
-        double[][] aMatrix = getInputAsMatrix(stdin, "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0");
-        double[][] bMatrix = getInputAsMatrix(stdin, "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9");
-        double[][] piMatrix = getInputAsMatrix(stdin, "1 4 1.0 0.0 0.0 0.0");
-        int[] obsSequence = getInputAsVector(stdin, "8 0 1 2 3 0 1 2 3");
+        
+        double[][] aMatrix = getInputAsMatrix(stdin);
+        double[][] bMatrix = getInputAsMatrix(stdin);
+        double[][] piMatrix = getInputAsMatrix(stdin);
+        int[] obsSequence = getInputAsVector(stdin);
+        
+        // Used for testing
+        // double[][] aMatrix = getInputAsMatrix(stdin, "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0");
+        // double[][] bMatrix = getInputAsMatrix(stdin, "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9");
+        // double[][] piMatrix = getInputAsMatrix(stdin, "1 4 1.0 0.0 0.0 0.0");
+        // int[] obsSequence = getInputAsVector(stdin, "8 0 1 2 3 0 1 2 3");
 
         // get first column from inputMatrix
         double[][] alpha = elementWiseProduct(piMatrix,getColumnFromMatrix(bMatrix, obsSequence[0]));
@@ -196,7 +224,8 @@ public class Main {
             alpha = elementWiseProduct(matrixMultiplier(alpha, aMatrix), getColumnFromMatrix(bMatrix, obsSequence[i]));
         }
         
-        System.out.println(alpha[0][obsSequence[obsSequence.length-1]]);
+        double output = sumVector(alpha);
+        System.out.println(round(output,6));
 
 
     }

@@ -127,6 +127,21 @@ public class Main {
         return columnVector;
     }
     
+    public static float[][] transposeMatrix(float[][] matrix) {
+        int rows = matrix.length;
+        int columns = matrix[0].length;
+
+        float[][] newMatrix = new float[columns][rows];
+
+        for(int i = 0; i < columns; i++) {
+            for(int j = 0; j < rows; j++) {
+                newMatrix[i][j] = matrix[j][i];
+            }
+        }
+
+        return newMatrix;
+    }
+    
     public static int[] getInputAsVector(BufferedReader input) throws IOException {
 
         String inputData = input.readLine();

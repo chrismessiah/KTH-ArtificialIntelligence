@@ -71,21 +71,31 @@ public class Main {
         
         /* OBS: include transpose function if vec1.length == 1. */
 
+        if (vec1[0].length == 1){
+            vec1 = transposeMatrix(vec1);
+        }
+
         /* OBS: include transpose function if vec2.length == 1. */
 
-        float[][] resultVector = new float[vec1.length][1];
+        if (vec2[0].length == 1){
+            vec2 = transposeMatrix(vec2);
+        }
+
+
+        float[][] resultVector = new float[vec1[0].length][1];
 
         // checks that length is equal
-        if (vec1.length != vec2.length){
+        if (vec1[0].length != vec2[0].length){
             System.out.println("elementWiseVectorProduct requires equal length matrices. \nSHUTTING DOWN PROGRAM");
             System.exit(0);
         }
 
         // for each element, multiply
         for (int i=0; i<vec1.length; i++) {
-            resultVector = vec1[0][i] * vec2[0][i]
-
+            resultVector[0][i] = vec1[0][i] * vec2[0][i];
+        }
         return resultVector;
+
 
     }
 
@@ -159,17 +169,28 @@ public class Main {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
         //float[][] aMatrix = getInputAsMatrix(stdin);
         float[][] bMatrix = getInputAsMatrix(stdin);
-        float[][] columnVector = getColumnFromMatrix(result, 1);
+
+        // get first column from inputMatrix
+        float[][] columnVector = getColumnFromMatrix(bMatrix, 1);
         
         float[][] piMatrix = getInputAsMatrix(stdin);
         
-        float[][] result = matrixMultiplier(piMatrix, bMatrix);
+        //float[][] result = matrixMultiplier(piMatrix, bMatrix);
         
         printMatrix(bMatrix);
-        printMatrix(result);
+        //printMatrix(result);
         printMatrix(columnVector);
         //int[] vector = getInputAsVector(stdin);
         
+
+
+
+        float[][] testElement = elementWiseProduct(piMatrix,columnVector);
+        printMatrix(testElement);
+
+
+
+
         //printMatrix(aMatrix);
         //printMatrix(bMatrix);
         //printMatrix(columnVector);

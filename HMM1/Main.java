@@ -20,13 +20,16 @@ public class Main {
             System.exit(0);
         }
 
+        // create new matrix C
         float[][] C = new float[A.length][B[0].length];
+        // fill matrix with zeros
         for (int i = 0; i < A.length; i++) {
             for (int j = 0; j < B[0].length; j++) {
                 C[i][j] = 0;
             }
         }
 
+        // fill C with the actual numbers
         for (int i = 0; i < A.length; i++) {
             for (int j = 0; j < B[0].length; j++) {
                 for (int k = 0; k < A[0].length; k++) {
@@ -74,6 +77,9 @@ public class Main {
         }
         System.out.println(output);
     }
+
+
+
 
     public static float[][] getInput(BufferedReader input) throws IOException {
 

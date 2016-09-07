@@ -67,6 +67,30 @@ public class Main {
         return matrix;
     }
 
+    public static float[][] elementWiseProduct(float[][] vec1, float[][] vec2){
+        
+        /* OBS: include transpose function if vec1.length == 1. */
+
+        /* OBS: include transpose function if vec2.length == 1. */
+
+        float[][] resultVector = new float[vec1.length][1];
+
+        // checks that length is equal
+        if (vec1.length != vec2.length){
+            System.out.println("elementWiseVectorProduct requires equal length matrices. \nSHUTTING DOWN PROGRAM");
+            System.exit(0);
+        }
+
+        // for each element, multiply
+        for (int i=0; i<vec1.length; i++) {
+            resultVector = vec1[0][i] * vec2[0][i]
+
+        return resultVector;
+
+    }
+
+
+
     public static void printMatrixForKattis(float[][] matrix) {
         int rows = matrix.length;
         int columns = matrix[0].length;

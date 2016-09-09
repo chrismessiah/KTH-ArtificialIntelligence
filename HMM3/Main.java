@@ -11,15 +11,6 @@ import java.lang.Math;
 
 public class Main {
 
-    // SAMPLE INPUT
-    String line1 = "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0";
-    String line2 = "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9";
-    String line3 = "1 4 1.0 0.0 0.0 0.0";
-    String line4 = "4 1 1 2 2";
-    
-    // SAMPLE OUTPUT
-    // 0 1 2 1
-
     public static double[][] matrixMultiplier(double[][] A, double[][] B) {
 
         if (A[0].length != B.length) {
@@ -209,6 +200,15 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
+        
+        // SAMPLE INPUT
+        String line1 = "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0";
+        String line2 = "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9";
+        String line3 = "1 4 1.0 0.0 0.0 0.0";
+        String line4 = "4 1 1 2 2";
+        // SAMPLE OUTPUT
+        // 0 1 2 1
+        
         
         //double[][] aMatrix = getInputAsMatrix(stdin);
         //double[][] bMatrix = getInputAsMatrix(stdin);

@@ -51,6 +51,13 @@ public class Main {
             printArray(matrix[i]);
         }
     }
+    
+    public static void printMatrix(int[][] matrix) {
+        System.out.println("");
+        for (int i=0;i < matrix.length; i++) {
+            printArray(matrix[i]);
+        }
+    }
 
     public static double[][] vectorToMatrix(String[] vector, int rows, int columns) {
         double[][] matrix = new double[rows][columns];
@@ -224,6 +231,20 @@ public class Main {
         return matrix;
     }
     
+    public static int[][] storeColumnVectorInMatrix(int[][] matrix, int[][] columnVector, int storeInColumnNum) {
+        if (columnVector[0].length != 1) {
+            printMatrix(matrix);
+            printMatrix(columnVector);
+            shutDownProgram("Column vector dimensions incorrect in storeColumnVectorInMatrix");
+        }
+        
+        for (int i=0; i<columnVector.length; i++) {
+            matrix[i][storeInColumnNum] = columnVector[i][0];
+        }
+        
+        return matrix;
+    }
+    
     public static double[][] scaleMatrix(double[][] matrix, double scalar) {
         for (int i=0; i<matrix.length; i++) {
             for (int j=0; j<matrix[0].length; j++) {
@@ -241,18 +262,30 @@ public class Main {
             tempVector = transposeMatrix(elementWiseProduct(bColumn, tempVector));
             tempMatrix = storeColumnVectorInMatrix(tempMatrix, tempVector, i);
         }
-        double[][] output = new double[aMatrix.length][1];
+        double[][] output = new double[aMatrix.length][2];
         for (int i=0; i<aMatrix.length; i++) {
-            double[] evaluateArrayToMaxArray = transposeMatrix(getRowFromMatrix(tempMatrix, i))[0];
+            double[] evaluateArrayToMaxArray = getRowFromMatrix(tempMatrix, i)[0];
             ArrayList<Double> evaluateArrayToMaxArrayList = new ArrayList<Double>();
             for (double num : evaluateArrayToMaxArray) {
                 evaluateArrayToMaxArrayList.add(num);
             }
             double maxValue = Collections.max(evaluateArrayToMaxArrayList);
             output[i][0] = maxValue;
+            output[i][1] = evaluateArrayToMaxArrayList.indexOf(maxValue);
         }
         return output;
         
+    }
+    
+    public static int[][] doubleMatrixToIntMatrix(double[][] matrix) {
+        int[][] newMatrix = new int[matrix.length][matrix[0].length];
+        for (int i=0; i<matrix.length; i++) {
+            for (int j=0; j<matrix[0].length; j++) {
+                Double d = new Double(matrix[i][j]);
+                newMatrix[i][j] = d.intValue();
+            }
+        }
+        return newMatrix;
     }
     
 
@@ -290,7 +323,9 @@ public class Main {
         int[] obsSequence = getInputAsVector(stdin, line4);
         
         double[][] deltaMatrix = new double[piMatrix[0].length][obsSequence.length];
-        double[][] deltaVector;
+        int[][] deltaMatrixIndex = new int[piMatrix[0].length][obsSequence.length];
+        int[][] deltaIndex;
+        double[][] deltaVector, output;
         
 
         // Initalize (and get first column from inputMatrix)
@@ -299,10 +334,16 @@ public class Main {
         
         // After initalize
         for (int i=1; i<obsSequence.length; i++) {
-            deltaVector = calcNextDelta(aMatrix, deltaVector, getColumnFromMatrix(bMatrix, obsSequence[i]));
+            output = calcNextDelta(aMatrix, deltaVector, getColumnFromMatrix(bMatrix, obsSequence[i]));
+            deltaVector = getColumnFromMatrix(output, 0);
+            deltaIndex = doubleMatrixToIntMatrix(getColumnFromMatrix(output, 1));
             deltaMatrix = storeColumnVectorInMatrix(deltaMatrix, deltaVector, i);
+            deltaMatrixIndex = storeColumnVectorInMatrix(deltaMatrixIndex, deltaIndex, i);
         }
+        System.out.println("deltaMatrix");
         printMatrix(deltaMatrix);
+        System.out.println("deltaMatrixIndex");
+        printMatrix(deltaMatrixIndex);
         
         //printMatrix(deltaVector);
         //printMatrix(deltaMatrix);

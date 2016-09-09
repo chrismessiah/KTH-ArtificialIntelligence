@@ -201,6 +201,20 @@ public class Main {
         return sum;
     }
     
+    public static double[][] storeColumnVectorInMatrix(double[][] matrix, double[][] columnVector, int storeInColumnNum) {
+        if (columnVector[0].length != 1) {
+            printMatrix(matrix);
+            printMatrix(columnVector);
+            shutDownProgram("Column vector dimensions incorrect in storeColumnVectorInMatrix");
+        }
+        
+        for (int i=0; i<columnVector.length; i++) {
+            matrix[i][storeInColumnNum] = columnVector[i][0];
+        }
+        
+        return matrix;
+    }
+    
 
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));

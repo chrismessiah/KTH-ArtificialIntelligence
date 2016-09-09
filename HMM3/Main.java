@@ -61,6 +61,11 @@ public class Main {
         }
         return matrix;
     }
+    
+    public static void shutDownProgram(String errorMessage) {
+        System.out.println("ERROR: " + errorMessage);
+        System.exit(0);
+    }
 
     public static double[][] elementWiseProduct(double[][] vec1, double[][] vec2){
         
@@ -78,8 +83,7 @@ public class Main {
 
         // checks that length is equal
         if (vec1[0].length != vec2[0].length){
-            System.out.println("elementWiseVectorProduct requires equal length matrices. \nSHUTTING DOWN PROGRAM");
-            System.exit(0);
+            shutDownProgram("elementWiseVectorProduct requires equal length matrices. \nSHUTTING DOWN PROGRAM");
         }
 
         // for each element, multiply

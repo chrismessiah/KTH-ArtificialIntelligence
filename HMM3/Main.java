@@ -142,6 +142,13 @@ public class Main {
         return columnVector;
     }
     
+    public static double[][] getRowFromMatrix(double[][] matrix, int rowNumber) {
+        double[][] transpose = transposeMatrix(matrix);
+        double[][] columnVector = getColumnFromMatrix(transpose, rowNumber);
+        double[][] rowVector = transposeMatrix(columnVector);
+        return rowVector;
+    }
+    
     public static double[][] transposeMatrix(double[][] matrix) {
         int rows = matrix.length;
         int columns = matrix[0].length;

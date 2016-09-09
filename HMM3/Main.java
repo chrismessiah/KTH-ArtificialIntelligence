@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Arrays;
 import java.lang.Math;
+import java.util.Collections;
+import java.util.ArrayList;
 
 public class Main {
 
@@ -222,15 +224,56 @@ public class Main {
         return matrix;
     }
     
+    public static double[][] scaleMatrix(double[][] matrix, double scalar) {
+        for (int i=0; i<matrix.length; i++) {
+            for (int j=0; j<matrix[0].length; j++) {
+                matrix[i][j] = matrix[i][j]*scalar;
+            }
+        }
+        return matrix;
+    }
+    
+    public static double[][] calcNextDelta(double[][] aMatrix,  double[][] prevDeltaVector, double[][] bColumn) {
+        double[][] tempMatrix = new double[aMatrix.length][aMatrix.length];
+        for (int i=0; i<aMatrix.length; i++) {
+            double[][] aRow = getRowFromMatrix(aMatrix, i);    
+            double[][] tempVector = scaleMatrix(aRow, prevDeltaVector[i][0]);
+            tempVector = transposeMatrix(elementWiseProduct(bColumn, tempVector));
+            tempMatrix = storeColumnVectorInMatrix(tempMatrix, tempVector, i);
+        }
+        double[][] output = new double[aMatrix.length][1];
+        for (int i=0; i<aMatrix.length; i++) {
+            double[] evaluateArrayToMaxArray = transposeMatrix(getRowFromMatrix(tempMatrix, i))[0];
+            ArrayList<Double> evaluateArrayToMaxArrayList = new ArrayList<Double>();
+            for (double num : evaluateArrayToMaxArray) {
+                evaluateArrayToMaxArrayList.add(num);
+            }
+            double maxValue = Collections.max(evaluateArrayToMaxArrayList);
+            output[i][0] = maxValue;
+        }
+        return output;
+        
+    }
+    
 
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
         
+        // OUR INPUT
+        String line1 = "4 4 0.6 0.1 0.1 0.2 0.0 0.3 0.2 0.5 0.8 0.1 0.0 0.1 0.2 0.0 0.1 0.7";
+        String line2 = "4 4 0.6 0.2 0.1 0.1 0.1 0.4 0.1 0.4 0.0 0.0 0.7 0.3 0.0 0.0 0.1 0.9";
+        String line3 = "1 4 0.5 0.0 0.0 0.5";
+        String line4 = "4 2 0 3 1";
+        
+        // SAMPLE OUTPUT
+        // 0 1 2 1
+        
         // SAMPLE INPUT
-        String line1 = "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0";
-        String line2 = "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9";
-        String line3 = "1 4 1.0 0.0 0.0 0.0";
-        String line4 = "4 1 1 2 2";
+        // String line1 = "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0";
+        // String line2 = "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9";
+        // String line3 = "1 4 1.0 0.0 0.0 0.0";
+        // String line4 = "4 1 1 2 2";
+        
         // SAMPLE OUTPUT
         // 0 1 2 1
         
@@ -245,15 +288,32 @@ public class Main {
         double[][] bMatrix = getInputAsMatrix(stdin, line2);
         double[][] piMatrix = getInputAsMatrix(stdin, line3);
         int[] obsSequence = getInputAsVector(stdin, line4);
-
-        // get first column from inputMatrix
-        double[][] alpha = elementWiseProduct(piMatrix,getColumnFromMatrix(bMatrix, obsSequence[0]));
-        for (int i=1; i<obsSequence.length; i++) {
-            alpha = elementWiseProduct(matrixMultiplier(alpha, aMatrix), getColumnFromMatrix(bMatrix, obsSequence[i]));
-        }
         
-        double output = sumVector(alpha);
-        System.out.println(round(output,6));
+        double[][] deltaMatrix = new double[piMatrix[0].length][obsSequence.length];
+        double[][] deltaVector;
+        
+
+        // Initalize (and get first column from inputMatrix)
+        deltaVector = transposeMatrix(elementWiseProduct(piMatrix,getColumnFromMatrix(bMatrix, obsSequence[0])));
+        deltaMatrix = storeColumnVectorInMatrix(deltaMatrix, deltaVector, 0);
+        
+        // After initalize
+        for (int i=1; i<obsSequence.length; i++) {
+            deltaVector = calcNextDelta(aMatrix, deltaVector, getColumnFromMatrix(bMatrix, obsSequence[i]));
+            deltaMatrix = storeColumnVectorInMatrix(deltaMatrix, deltaVector, i);
+        }
+        printMatrix(deltaMatrix);
+        
+        //printMatrix(deltaVector);
+        //printMatrix(deltaMatrix);
+        
+        // 
+        // for (int i=1; i<obsSequence.length; i++) {
+        //     delta = elementWiseProduct(matrixMultiplier(delta, aMatrix), getColumnFromMatrix(bMatrix, obsSequence[i]));
+        // }
+        
+        // double output = sumVector(alpha);
+        // System.out.println(round(output,6));
 
 
     }

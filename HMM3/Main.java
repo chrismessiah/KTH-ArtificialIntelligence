@@ -270,8 +270,13 @@ public class Main {
                 evaluateArrayToMaxArrayList.add(num);
             }
             double maxValue = Collections.max(evaluateArrayToMaxArrayList);
-            output[i][0] = maxValue;
-            output[i][1] = evaluateArrayToMaxArrayList.indexOf(maxValue);
+            if (maxValue > 0) {
+                output[i][0] = maxValue;
+                output[i][1] = evaluateArrayToMaxArrayList.indexOf(maxValue);
+            } else {
+                output[i][0] = maxValue;
+                output[i][1] = -1;
+            }
         }
         return output;
         
@@ -293,34 +298,34 @@ public class Main {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
         
         // OUR INPUT
-        String line1 = "4 4 0.6 0.1 0.1 0.2 0.0 0.3 0.2 0.5 0.8 0.1 0.0 0.1 0.2 0.0 0.1 0.7";
-        String line2 = "4 4 0.6 0.2 0.1 0.1 0.1 0.4 0.1 0.4 0.0 0.0 0.7 0.3 0.0 0.0 0.1 0.9";
-        String line3 = "1 4 0.5 0.0 0.0 0.5";
-        String line4 = "4 2 0 3 1";
+        // String line1 = "4 4 0.6 0.1 0.1 0.2 0.0 0.3 0.2 0.5 0.8 0.1 0.0 0.1 0.2 0.0 0.1 0.7";
+        // String line2 = "4 4 0.6 0.2 0.1 0.1 0.1 0.4 0.1 0.4 0.0 0.0 0.7 0.3 0.0 0.0 0.1 0.9";
+        // String line3 = "1 4 0.5 0.0 0.0 0.5";
+        // String line4 = "4 2 0 3 1";
         
         // SAMPLE OUTPUT
         // 0 1 2 1
         
         // SAMPLE INPUT
-        // String line1 = "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0";
-        // String line2 = "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9";
-        // String line3 = "1 4 1.0 0.0 0.0 0.0";
-        // String line4 = "4 1 1 2 2";
+        String line1 = "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0";
+        String line2 = "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9";
+        String line3 = "1 4 1.0 0.0 0.0 0.0";
+        String line4 = "4 1 1 2 2";
         
         // SAMPLE OUTPUT
         // 0 1 2 1
         
         
-        //double[][] aMatrix = getInputAsMatrix(stdin);
-        //double[][] bMatrix = getInputAsMatrix(stdin);
-        //double[][] piMatrix = getInputAsMatrix(stdin);
-        //int[] obsSequence = getInputAsVector(stdin);
+        double[][] aMatrix = getInputAsMatrix(stdin);
+        double[][] bMatrix = getInputAsMatrix(stdin);
+        double[][] piMatrix = getInputAsMatrix(stdin);
+        int[] obsSequence = getInputAsVector(stdin);
         
         // Used for testing
-        double[][] aMatrix = getInputAsMatrix(stdin, line1);
-        double[][] bMatrix = getInputAsMatrix(stdin, line2);
-        double[][] piMatrix = getInputAsMatrix(stdin, line3);
-        int[] obsSequence = getInputAsVector(stdin, line4);
+        // double[][] aMatrix = getInputAsMatrix(stdin, line1);
+        // double[][] bMatrix = getInputAsMatrix(stdin, line2);
+        // double[][] piMatrix = getInputAsMatrix(stdin, line3);
+        // int[] obsSequence = getInputAsVector(stdin, line4);
         
         double[][] deltaMatrix = new double[piMatrix[0].length][obsSequence.length];
         int[][] deltaMatrixIndex = new int[piMatrix[0].length][obsSequence.length];
@@ -340,21 +345,27 @@ public class Main {
             deltaMatrix = storeColumnVectorInMatrix(deltaMatrix, deltaVector, i);
             deltaMatrixIndex = storeColumnVectorInMatrix(deltaMatrixIndex, deltaIndex, i);
         }
-        System.out.println("deltaMatrix");
-        printMatrix(deltaMatrix);
-        System.out.println("deltaMatrixIndex");
-        printMatrix(deltaMatrixIndex);
         
-        //printMatrix(deltaVector);
-        //printMatrix(deltaMatrix);
+        // System.out.println("deltaMatrix");
+        // printMatrix(deltaMatrix);
+        // System.out.println("deltaMatrixIndex");
+        // printMatrix(deltaMatrixIndex);
+        // System.out.println("");
+        // printArray(deltaMatrixIndex[0]);
         
-        // 
-        // for (int i=1; i<obsSequence.length; i++) {
-        //     delta = elementWiseProduct(matrixMultiplier(delta, aMatrix), getColumnFromMatrix(bMatrix, obsSequence[i]));
-        // }
+        String toPrint = "";
         
-        // double output = sumVector(alpha);
-        // System.out.println(round(output,6));
+        for (int i=deltaMatrixIndex[0].length-1; i>-1; i--) {
+            for (int j=0; j<deltaMatrixIndex.length; j++) {
+                if (deltaMatrixIndex[j][i] != -1) {
+                    toPrint += Integer.toString(j) + " ";
+                    break;
+                }
+            }
+        }
+        
+        toPrint = new StringBuilder(toPrint).reverse().toString().trim();
+        System.out.println(toPrint);
 
 
     }

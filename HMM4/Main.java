@@ -257,9 +257,39 @@ public class Main {
         }
         return betaMatrix;
 
+    }
 
+    public static reEstimate_lambda (int[] obsSequence, double[][] alphaMatrix, double[][] betaMatrix){
+        int N = aMatrix[0].length;
+        int M = obsSequence.length;
+        double[][] diGamma_numerator = new double[N][M];
+
+        // estimate diGamma matrix as described in stamp. 
+        // OBS: in the formula for diGamma, the complicated numerator
+        // is actually beta_t, expressed using beta_t+1
+
+        // for each state
+        for (i=0;i<N;i++){
+            // for all timesteps
+            for (t=0;t<M;t++){
+                diGamma_numerator[i][t] = alphaMatrix[i][t] * betaMatrix[i][t]
+            }
+
+        // like in HMM2
+        diGamma_denominator = sumVector(alphaMatrix);
+
+
+        // HERE I SHOULD DIVIDE BY P(observations | model), as in HMM2
+
+
+
+        }
 
     }
+
+
+
+
 
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));

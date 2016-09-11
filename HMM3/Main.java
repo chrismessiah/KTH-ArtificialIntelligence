@@ -104,7 +104,7 @@ public class Main {
     }
 
 
-
+    // used only in HMM1
     public static void printMatrixForKattis(double[][] matrix) {
         int rows = matrix.length;
         int columns = matrix[0].length;
@@ -256,20 +256,31 @@ public class Main {
     
     public static double[][] calcNextDelta(double[][] aMatrix,  double[][] prevDeltaVector, double[][] bColumn) {
         double[][] tempMatrix = new double[aMatrix.length][aMatrix.length];
+        
+        // for each for of A matrix
+        
+        // the whole operation to create temporary matrix before max from lesson 2
         for (int i=0; i<aMatrix.length; i++) {
-            double[][] aRow = getRowFromMatrix(aMatrix, i);    
+            double[][] aRow = getRowFromMatrix(aMatrix, i); // called aji in formulas
             double[][] tempVector = scaleMatrix(aRow, prevDeltaVector[i][0]);
             tempVector = transposeMatrix(elementWiseProduct(bColumn, tempVector));
             tempMatrix = storeColumnVectorInMatrix(tempMatrix, tempVector, i);
         }
+        
+        // take max from each row of temporary matrix. This is the last step of calculating each delta
+        // output is a Nx2 matrix, where col1 max probability and col2 has argmax state for THIS delta-value. See lesson 2.
         double[][] output = new double[aMatrix.length][2];
         for (int i=0; i<aMatrix.length; i++) {
+            
+            // convert double[] to ArrayList<Double> to use max function
             double[] evaluateArrayToMaxArray = getRowFromMatrix(tempMatrix, i)[0];
             ArrayList<Double> evaluateArrayToMaxArrayList = new ArrayList<Double>();
             for (double num : evaluateArrayToMaxArray) {
                 evaluateArrayToMaxArrayList.add(num);
             }
             double maxValue = Collections.max(evaluateArrayToMaxArrayList);
+            
+            // test that the max-value is valid
             if (maxValue > 0) {
                 output[i][0] = maxValue;
                 output[i][1] = evaluateArrayToMaxArrayList.indexOf(maxValue);
@@ -333,12 +344,13 @@ public class Main {
         double[][] deltaVector, output;
         
 
-        // Initalize (and get first column from inputMatrix)
+        // Initalize; calculate delta1
         deltaVector = transposeMatrix(elementWiseProduct(piMatrix,getColumnFromMatrix(bMatrix, obsSequence[0])));
         deltaMatrix = storeColumnVectorInMatrix(deltaMatrix, deltaVector, 0);
         
-        // After initalize
+        // calculate remaining deltas, t>1
         for (int i=1; i<obsSequence.length; i++) {
+            // estimate max probability and argmax state for this delta
             output = calcNextDelta(aMatrix, deltaVector, getColumnFromMatrix(bMatrix, obsSequence[i]));
             deltaVector = getColumnFromMatrix(output, 0);
             deltaIndex = doubleMatrixToIntMatrix(getColumnFromMatrix(output, 1));
@@ -354,26 +366,27 @@ public class Main {
         // System.out.println("");
         
         
-        // part 1 - get start index
+        // part 1 - get start index to backtracking by max-function on the last delta vector.
         String toPrint = "";
         ArrayList<Double> tempList = new ArrayList<Double>();
         double[][] tempArray123 =  getColumnFromMatrix(deltaMatrix, deltaMatrix[0].length-1);
-        for (int i=0; i<tempArray123.length; i++) {
-            tempList.add(tempArray123[i][0]);
-        }
+        for (int i=0; i<tempArray123.length; i++) {tempList.add(tempArray123[i][0]);}
         double maxValue = Collections.max(tempList);
         
+        // add the index to the output
         int state = tempList.indexOf(maxValue);
         int index = deltaMatrixIndex[state][3];
         toPrint += Integer.toString(state) + " ";
         
             
-        // part 2 - get all other
+        // part 2 - Apply backtracking and get all other indexes
         for (int t=deltaMatrixIndex[0].length-2; t>-1; t--) {
-            state = index;
-            index = deltaMatrixIndex[index][t];
+            state = index; // the previous index is the current state 
+            index = deltaMatrixIndex[index][t]; // get the current index
             toPrint += Integer.toString(state) + " ";
         }
+        
+        // reverse and print output
         toPrint = new StringBuilder(toPrint).reverse().toString().trim();
         System.out.println(toPrint);
 

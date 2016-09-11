@@ -315,7 +315,7 @@ public class Main {
         // SAMPLE OUTPUT
         // 0 1 2 1
         
-        
+        // Used by kattis
         double[][] aMatrix = getInputAsMatrix(stdin);
         double[][] bMatrix = getInputAsMatrix(stdin);
         double[][] piMatrix = getInputAsMatrix(stdin);
@@ -346,24 +346,34 @@ public class Main {
             deltaMatrixIndex = storeColumnVectorInMatrix(deltaMatrixIndex, deltaIndex, i);
         }
         
+        
         // System.out.println("deltaMatrix");
         // printMatrix(deltaMatrix);
         // System.out.println("deltaMatrixIndex");
         // printMatrix(deltaMatrixIndex);
         // System.out.println("");
-        // printArray(deltaMatrixIndex[0]);
         
+        
+        // part 1 - get start index
         String toPrint = "";
-        
-        for (int i=deltaMatrixIndex[0].length-1; i>-1; i--) {
-            for (int j=0; j<deltaMatrixIndex.length; j++) {
-                if (deltaMatrixIndex[j][i] != -1) {
-                    toPrint += Integer.toString(j) + " ";
-                    break;
-                }
-            }
+        ArrayList<Double> tempList = new ArrayList<Double>();
+        double[][] tempArray123 =  getColumnFromMatrix(deltaMatrix, deltaMatrix[0].length-1);
+        for (int i=0; i<tempArray123.length; i++) {
+            tempList.add(tempArray123[i][0]);
         }
+        double maxValue = Collections.max(tempList);
         
+        int state = tempList.indexOf(maxValue);
+        int index = deltaMatrixIndex[state][3];
+        toPrint += Integer.toString(state) + " ";
+        
+            
+        // part 2 - get all other
+        for (int t=deltaMatrixIndex[0].length-2; t>-1; t--) {
+            state = index;
+            index = deltaMatrixIndex[index][t];
+            toPrint += Integer.toString(state) + " ";
+        }
         toPrint = new StringBuilder(toPrint).reverse().toString().trim();
         System.out.println(toPrint);
 

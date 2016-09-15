@@ -304,7 +304,7 @@ public class Main {
 
         
     
-        int test_mode = 3;
+        int test_mode = 0;
 
         //
         if (test_mode == 1){

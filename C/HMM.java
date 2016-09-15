@@ -1,12 +1,3 @@
-// Problem:
-// https://kth.kattis.com/problems/kth.ai.hmm4
-// 
-// Course:
-// Artificial Intelligence
-//
-// Authors:
-// Amund Vedal
-// Christian Abdelmassih
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -30,7 +21,7 @@ public class HMM {
     public HMM(double[][] aMat,double[][] bMat,double[][] piMat) {
         A = aMat;
         B = bMat;
-        pi = piMat;
+        pi = transposeMatrix(piMat);
         maxIters = 70;
     }
 
@@ -58,7 +49,7 @@ public class HMM {
             double[][] betaMatrix = beta_backward_pass(obsSequence);
             reEstimate_lambda(obsSequence, alphaMatrix, betaMatrix);
 
-            logProb = calcLogProb(obsSequence);
+            calcLogProb(obsSequence);
 
             /*
             if (logProb > oldLogProb){
@@ -75,17 +66,34 @@ public class HMM {
     }
 
     // sum all alphas in one sequence to get the probability of the sequence
-    public double calcLogProb(int[] obsSequence){
+    public void calcLogProb(int[] obsSequence){
+
+        int T = obsSequence.length;
+        double[][] alpha = alpha_forward_pass(obsSequence);
+
+        double logProb = 0;
+        for (int t=0;t<T;t++){
+            logProb += Math.log(1./sumVector(transposeMatrix(alpha)[t]));
+        }
+        System.out.println(Math.pow(Math.E,-logProb));
+        return;
+    }
+
+
+/*
+
+
         int T = obsSequence.length;
         double logProb = 0;
         for (int i=0;i<T;i++){
             logProb = logProb + Math.log10(ct_array[i]);
         }
+        //printArray(ct_array);
         return logProb;
     }
 
 
-
+*/
     public double[][] alpha_forward_pass(int[] obsSequence){
 
         int N = A[0].length; // 4
@@ -101,7 +109,7 @@ public class HMM {
             alpha[i][0] = pi[i][0] * B[i][0];
             c0 = c0 + alpha[i][0];
         }
-        ct_array[0] = 1/c0;
+        ct_array[0] = 1./c0;
 
         double ct;
         // scale the alpha0(i)
@@ -117,7 +125,7 @@ public class HMM {
             }
 
             // scale alpha_t(i)
-            ct = 1/ct;
+            ct = 1./ct;
             for(int i=0;i<N;i++){
                 alpha[i][t] = ct * alpha[i][t];
             }
@@ -232,6 +240,191 @@ public class HMM {
     }
 
 
+    public static double[][] matrixMultiplier(double[][] A, double[][] B) {
+
+        if (A[0].length != B.length) {
+            System.out.println("ERROR MATRIX DIMENSIONS INCORRECT! A: " + Integer.toString(A[0].length) + " B: " + Integer.toString(B.length) + "\nSHUTTING DOWN PROGRAM");
+            System.exit(0);
+        }
+
+        double[][] C = new double[A.length][B[0].length];
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < B[0].length; j++) {
+                C[i][j] = 0;
+            }
+        }
+
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < B[0].length; j++) {
+                for (int k = 0; k < A[0].length; k++) {
+                    C[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+        return C;
+    }
+
+    public static void printArray(double[] array) {
+        System.out.println(Arrays.toString(array));
+    }
+    
+    public static void printArray(int[] array) {
+        System.out.println(Arrays.toString(array));
+    }
+
+    public static void printMatrix(double[][] matrix) {
+        System.out.println("");
+        for (int i=0;i < matrix.length; i++) {
+            printArray(matrix[i]);
+        }
+    }
+
+    public static double[][] vectorToMatrix(String[] vector, int rows, int columns) {
+        double[][] matrix = new double[rows][columns];
+        int k=0;
+        for (int i=0; i <rows; i++) {
+            for (int j=0; j <columns; j++) {
+                matrix[i][j] = Double.parseDouble(vector[k]);
+                k+=1;
+            }
+        }
+        return matrix;
+    }
+
+    public static double[][] elementWiseProduct(double[][] vec1, double[][] vec2){
+        
+        /* OBS: include transpose function if vec1.length == 1. */
+        if (vec1[0].length == 1){
+            vec1 = transposeMatrix(vec1);
+        }
+
+        /* OBS: include transpose function if vec2.length == 1. */
+        if (vec2[0].length == 1){
+            vec2 = transposeMatrix(vec2);
+        }
+        
+        double[][] resultVector = new double[1][vec1[0].length];
+
+        // checks that length is equal
+        if (vec1[0].length != vec2[0].length){
+            System.out.println("elementWiseVectorProduct requires equal length matrices. \nSHUTTING DOWN PROGRAM");
+            System.exit(0);
+        }
+
+        // for each element, multiply
+        for (int i=0; i <vec1[0].length; i++) {
+            resultVector[0][i] = vec1[0][i] * vec2[0][i];
+        }
+        
+        return resultVector;
+    }
+
+
+
+    public static void printMatrixForKattis(double[][] matrix) {
+        int rows = matrix.length;
+        int columns = matrix[0].length;
+        String output = "" + Integer.toString(rows) + " " + Integer.toString(columns) + " ";
+        for (int i=0; i <rows; i++) {
+            for (int j=0;j <columns; j++) {
+                output += Double.toString(matrix[i][j]);
+                if (i+1 != rows || j+1 != columns) {
+                   output += " ";
+                }
+            }
+        }
+        System.out.println(output);
+    }
+
+    public static double[][] getInputAsMatrix(BufferedReader input) throws IOException {
+
+        String inputData = input.readLine();
+        String[] inputParts = inputData.split(" ");
+        
+        int rows = Integer.parseInt(inputParts[0]);
+        int columns = Integer.parseInt(inputParts[1]);
+        String[] inputVector = Arrays.copyOfRange(inputParts, 2, inputParts.length);
+        double[][] matrix = vectorToMatrix(inputVector, rows, columns);
+        return matrix;
+    }
+    
+    public static double[][] getInputAsMatrix(BufferedReader input, String inputString) throws IOException {
+
+        String[] inputParts = inputString.split(" ");
+        
+        int rows = Integer.parseInt(inputParts[0]);
+        int columns = Integer.parseInt(inputParts[1]);
+        String[] inputVector = Arrays.copyOfRange(inputParts, 2, inputParts.length);
+        double[][] matrix = vectorToMatrix(inputVector, rows, columns);
+        return matrix;
+    }
+    
+    public static double[][] getColumnFromMatrix(double[][] matrix, int column) {
+        double[][] columnVector = new double[matrix.length][1];
+        for (int i=0;i <matrix.length; i++) {
+            columnVector[i][0] = matrix[i][column];
+        }
+        return columnVector;
+    }
+    
+    public static double[][] transposeMatrix(double[][] matrix) {
+        int rows = matrix.length;
+        int columns = matrix[0].length;
+
+        double[][] newMatrix = new double[columns][rows];
+
+        for(int i = 0; i < columns; i++) {
+            for(int j = 0; j < rows; j++) {
+                newMatrix[i][j] = matrix[j][i];
+            }
+        }
+
+        return newMatrix;
+    }
+    
+    public static int[] getInputAsVector(BufferedReader input) throws IOException {
+
+        String inputData = input.readLine();
+        String[] inputParts = inputData.split(" ");
+        
+        int numberOfElements = Integer.parseInt(inputParts[0]);
+        int[] vector = new int[numberOfElements];
+        for (int i=0; i <numberOfElements; i++) {
+            vector[i] = Integer.parseInt(inputParts[i+1]);
+        }
+        return vector;
+    }
+    
+    public static int[] getInputAsVector(BufferedReader input, String inputString) throws IOException {
+
+        String[] inputParts = inputString.split(" ");
+        
+        int numberOfElements = Integer.parseInt(inputParts[0]);
+        int[] vector = new int[numberOfElements];
+        for (int i=0; i <numberOfElements; i++) {
+            vector[i] = Integer.parseInt(inputParts[i+1]);
+        }
+        return vector;
+    }
+    
+    
+    // rounds double to specified decimal (unlike Math.round)
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
+    
+    public static double sumVector(double[] vector) {
+        double sum = 0;
+        for (int i=0; i <vector.length; i++) {
+            sum += vector[i];
+        }
+        return sum;
+    }
 
 
 }

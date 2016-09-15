@@ -113,7 +113,6 @@ public class Main {
     }
 
 
-
     public static void printMatrixForKattis(double[][] matrix) {
         int rows = matrix.length;
         int columns = matrix[0].length;
@@ -220,90 +219,6 @@ public class Main {
     }
     
 
-    public static double[][] alpha_forward_pass(int[] obsSequence, double[][] piMatrix, double[][] aMatrix, double[][] bMatrix){
-
-        // Initialize the first alpha as pi_i * bi(O=obsSequence[0])
-        double[][] alphaMatrix = elementWiseProduct(piMatrix,getColumnFromMatrix(bMatrix, obsSequence[0]));
-        
-        // fill in the rest of the alphas (skipping the first step i=0)
-        for (int i=1; i<obsSequence.length; i++) {
-            alphaMatrix = elementWiseProduct(matrixMultiplier(alphaMatrix, aMatrix), getColumnFromMatrix(bMatrix, obsSequence[i]));
-        }
-
-        return alphaMatrix;
-    }
-
-
-
-    // Never tested
-    public static double[][] beta_backward_pass(int[] obsSequence, double[][] aMatrix, double[][] bMatrix){
-
-        // the betaMatrix is [N x M]
-        // N is number of states
-        // M is number of observations
-        int N = aMatrix[0].length;
-        int M = obsSequence.length;
-        double[][] betaMatrix = new double[N][M];
-
-        // Initialize by setting the last beta-column to 1's
-        for(int i=0; i<N; i++){
-            betaMatrix[i][M-1] = 1;
-        }
-
-        double[][] tempMatrix;
-        double[][] bi_vector;
-        double[][] beta1;
-        double[][] beta_tplus1;
-        
-
-        // going backwards through the observations from the last
-        for (int t=M-2; t<0; --t) {
-    
-            bi_vector = getColumnFromMatrix(bMatrix, obsSequence[t+1]);
-            beta_tplus1 = getColumnFromMatrix(betaMatrix, t+1);
-            
-            tempMatrix = matrixMultiplier(aMatrix,bi_vector);
-
-            // how should these indexes be filled out to fill whole column?
-            beta1 = elementWiseProduct(tempMatrix, beta_tplus1);
-
-            for (int j=0; j<N; j++){
-                betaMatrix[j][t] = beta1[j][0];
-            }
-
-        }
-        return betaMatrix;
-    }
-
-
-    public static void reEstimate_lambda (int[] obsSequence, double[][] aMatrix, double[][] bMatrix, double[][] alphaMatrix, double[][] betaMatrix){
-        int N = aMatrix[0].length;
-        int M = obsSequence.length;
-        double[][] gammaMatrix = new double[N][M];
-        double gamma_denominator;
-
-        // OBS: should this be M or M-1?
-        double[][] last_alpha_column = getColumnFromMatrix(alphaMatrix,M-1); // like in HMM2
-        gamma_denominator = sumVector(last_alpha_column);
-
-
-        // estimate gamma-matrix as described in problem 2 of stamp. 
-
-        // for each state
-        for (int i=0;i<N;i++){
-            // for all timesteps
-            for (int t=0;t<M;t++){
-                // Divide by P(observations | model), as in HMM2
-                gammaMatrix[i][t] = (alphaMatrix[i][t] * betaMatrix[i][t]) / gamma_denominator;
-            }
-        }
-
-        double[][] diGammaMatrix = new double[N][M];
-        return;
-
-    }
-
-
     public static String readTextfromFile(String filename) {
         String output = "";
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
@@ -315,7 +230,9 @@ public class Main {
     }
 
 
-
+    public static int[] getSubsetVector(int[] array, int num) {
+        return Arrays.copyOfRange(array, 1, num+1);
+    }
 
 
     public static void main(String args[]) throws IOException { 
@@ -329,30 +246,17 @@ public class Main {
         double[][] aAnswer;
         double[][] bAnswer;
 
+        int iterations = 700;
+        String filename = "obs10k.in";
+        int amountOfObservationsToUse = 1000;
         
-        String obsString = readTextfromFile("obs10k.in");
+        aMatrix = getInputAsMatrix(stdin, "3 3 0.54 0.26 0.20 0.19 0.53 0.28 0.22 0.18 0.6");
+        bMatrix = getInputAsMatrix(stdin, "3 4 0.5 0.2 0.11 0.19 0.22 0.28 0.23 0.27 0.19 0.21 0.15 0.45");
+        piMatrix = getInputAsMatrix(stdin, "1 3 0.3 0.2 0.5");
+        obsSequence = getInputAsVector(stdin, readTextfromFile(filename));
         
-        aMatrix = getInputAsMatrix(stdin, "3 3 0.7 0.05 0.25 0.1 0.8 0.1 0.2 0.3 0.5");
-        bMatrix = getInputAsMatrix(stdin, "3 4 0.7 0.2 0.1 0 0.1 0.4 0.3 0.2 0 0.1 0.2 0.7");
-        piMatrix = getInputAsMatrix(stdin, "1 2 1 0 0");
-        obsSequence = getInputAsVector(stdin, obsString);
-    
-        //aAnswer = getInputAsMatrix(stdin, "4 4 0.545455 0.454545 0.0 0.0 0.0 0.506173 0.493827 0.0 0.0 0.0 0.504132 0.495868 0.478088 0.0 0.0 0.521912");
-        //bAnswer = getInputAsMatrix(stdin, "4 4 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0");
-
-
-
-
-
-
-        piMatrix = transposeMatrix(piMatrix);
-        HMM hmm = new HMM(aMatrix,bMatrix,piMatrix);
-
+        HMM hmm = new HMM(aMatrix, bMatrix, piMatrix);
         hmm.baum_welch(obsSequence);
-        
-        
-        //printMatrix(hmm.A);
-        //printMatrix(hmm.B);
 
         double[][] A_iter = hmm.A;
         double[][] B_iter = hmm.B;

@@ -1,3 +1,12 @@
+// Problem:
+// https://kth.kattis.com/problems/kth.ai.hmm4
+// 
+// Course:
+// Artificial Intelligence
+//
+// Authors:
+// Amund Vedal
+// Christian Abdelmassih
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

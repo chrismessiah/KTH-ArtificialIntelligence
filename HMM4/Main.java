@@ -241,7 +241,7 @@ public class Main {
         
 
         // going backwards through the observations from the last
-        for (int t=M-2; t<0; --t) {
+        for (int t=M-1; t<0; --t) {
     
             bi_vector = getColumnFromMatrix(bMatrix, obsSequence[t+1]);
             beta_tplus1 = getColumnFromMatrix(betaMatrix, t+1);

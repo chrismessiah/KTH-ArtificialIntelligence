@@ -204,7 +204,7 @@ public class Main {
     }
     
 
-    public static double[][] alpha_forward_pass(int[] obsSequence){
+    public static double[][] alpha_forward_pass(int[] obsSequence, double[][] piMatrix, double[][] aMatrix, double[][] bMatrix){
 
         // Initialize the first alpha as pi_i * bi(O=obsSequence[0])
         double[][] alphaMatrix = elementWiseProduct(piMatrix,getColumnFromMatrix(bMatrix, obsSequence[0]));
@@ -220,7 +220,7 @@ public class Main {
 
 
     // Never tested
-    public static double[][] beta_backward_pass(int[] obsSequence){
+    public static double[][] beta_backward_pass(int[] obsSequence, double[][] aMatrix, double[][] bMatrix){
 
         // the betaMatrix is [N x M]
         // N is number of states
@@ -236,7 +236,8 @@ public class Main {
 
         double[][] tempMatrix;
         double[][] bi_vector;
-        double[][] newBetaVector;
+        double[][] beta1;
+        double[][] beta_tplus1;
         
 
         // going backwards through the observations from the last
@@ -248,42 +249,41 @@ public class Main {
             tempMatrix = matrixMultiplier(aMatrix,bi_vector);
 
             // how should these indexes be filled out to fill whole column?
-            newBetaVector = elementWiseProduct(tempMatrix, beta_tplus1);
+            beta1 = elementWiseProduct(tempMatrix, beta_tplus1);
 
             for (int j=0; j<N; j++){
-                betaMatrix[j][t] = newBetaVector[j][0];
+                betaMatrix[j][t] = beta1[j][0];
             }
 
         }
         return betaMatrix;
-
     }
 
-    public static reEstimate_lambda (int[] obsSequence, double[][] alphaMatrix, double[][] betaMatrix){
+
+    public static void reEstimate_lambda (int[] obsSequence, double[][] aMatrix, double[][] bMatrix, double[][] alphaMatrix, double[][] betaMatrix){
         int N = aMatrix[0].length;
         int M = obsSequence.length;
-        double[][] diGamma_numerator = new double[N][M];
+        double[][] gammaMatrix = new double[N][M];
+        double gamma_denominator;
 
-        // estimate diGamma matrix as described in stamp. 
-        // OBS: in the formula for diGamma, the complicated numerator
-        // is actually beta_t, expressed using beta_t+1
+        // OBS: should this be M or M-1?
+        double[][] last_alpha_column = getColumnFromMatrix(alphaMatrix,M-1); // like in HMM2
+        gamma_denominator = sumVector(last_alpha_column);
+
+
+        // estimate gamma-matrix as described in problem 2 of stamp. 
 
         // for each state
-        for (i=0;i<N;i++){
+        for (int i=0;i<N;i++){
             // for all timesteps
-            for (t=0;t<M;t++){
-                diGamma_numerator[i][t] = alphaMatrix[i][t] * betaMatrix[i][t]
+            for (int t=0;t<M;t++){
+                // Divide by P(observations | model), as in HMM2
+                gammaMatrix[i][t] = (alphaMatrix[i][t] * betaMatrix[i][t]) / gamma_denominator;
             }
-
-        // like in HMM2
-        diGamma_denominator = sumVector(alphaMatrix);
-
-
-        // HERE I SHOULD DIVIDE BY P(observations | model), as in HMM2
-
-
-
         }
+
+        double[][] diGammaMatrix = new double[N][M];
+        return;
 
     }
 
@@ -294,25 +294,116 @@ public class Main {
     public static void main(String args[]) throws IOException {
         BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
         
-        double[][] aMatrix = getInputAsMatrix(stdin);
-        double[][] bMatrix = getInputAsMatrix(stdin);
-        double[][] piMatrix = getInputAsMatrix(stdin);
-        int[] obsSequence = getInputAsVector(stdin);
+        double[][] aMatrix;
+        double[][] bMatrix;
+        double[][] piMatrix;
+        int[] obsSequence;
         
+        double[][] aAnswer;
+        double[][] bAnswer;
+
+        
+    
+        int test_mode = 3;
+
+        //
+        if (test_mode == 1){
+
+            aMatrix = getInputAsMatrix(stdin, "4 4 0.4 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.4");
+            bMatrix = getInputAsMatrix(stdin, "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9");
+            piMatrix = getInputAsMatrix(stdin, "1 4 0.241896 0.266086 0.249153 0.242864");
+            obsSequence = getInputAsVector(stdin, "1000 0 1 2 3 3 0 0 1 1 1 2 2 2 3 0 0 0 1 1 1 2 3 3 0 0 0 1 1 1 2 3 3 0 1 2 3 0 1 1 1 2 3 3 0 1 2 2 3 0 0 0 1 1 2 2 3 0 1 1 2 3 0 1 2 2 2 2 3 0 0 1 2 3 0 1 1 2 3 3 3 0 0 1 1 1 1 2 2 3 3 3 0 1 2 3 3 3 3 0 1 1 2 2 3 0 0 0 0 0 0 0 0 0 1 1 1 1 1 2 2 2 3 3 3 3 0 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3 3 0 1 2 3 0 1 1 1 2 3 0 1 1 2 2 2 2 2 3 0 1 1 1 2 2 2 2 3 0 0 0 0 0 1 1 1 1 2 2 3 3 0 1 2 3 3 0 0 0 0 0 0 1 1 2 2 3 0 0 1 1 1 1 1 1 2 3 3 0 0 1 1 1 2 3 0 0 1 2 3 0 1 1 2 3 3 0 0 0 1 2 3 3 3 0 1 1 1 1 2 3 3 3 3 3 3 0 1 2 2 2 2 2 2 3 0 1 1 1 2 2 3 3 3 3 0 1 2 3 0 0 0 1 1 2 2 3 0 0 0 0 0 0 0 1 2 2 2 3 3 3 3 0 0 1 2 2 2 3 3 3 0 0 1 2 2 3 0 0 0 0 1 1 1 2 3 3 3 3 3 3 3 3 0 1 2 3 0 0 1 2 3 3 3 0 0 0 0 0 1 1 1 1 2 3 0 0 0 1 2 2 3 3 0 0 0 1 1 1 1 1 2 3 3 3 3 0 1 1 1 2 2 3 0 1 2 3 3 3 3 0 0 0 0 1 2 3 3 0 1 2 2 3 3 0 0 1 1 2 3 3 0 1 2 2 3 3 3 0 0 1 1 2 3 3 3 3 0 0 1 1 2 3 3 0 1 2 3 0 1 1 2 2 3 0 1 2 3 3 0 1 1 1 2 2 2 3 3 0 0 1 1 1 1 1 2 3 3 3 0 1 1 2 2 2 2 3 3 0 0 1 2 3 0 1 1 2 2 2 2 3 0 0 1 2 2 3 0 0 0 0 0 1 1 1 2 3 0 0 1 2 3 3 0 0 0 1 2 2 2 3 3 0 0 0 1 2 2 2 2 2 3 0 1 1 2 3 0 0 1 1 1 2 2 3 0 0 0 0 1 1 1 2 2 3 0 1 1 1 2 2 2 3 3 0 0 1 2 2 3 3 3 0 1 1 2 3 0 0 0 0 0 1 2 2 2 3 3 3 0 0 0 1 2 3 0 1 1 2 3 3 3 0 1 2 2 2 3 0 0 1 1 1 1 2 3 3 0 0 0 0 1 2 3 3 3 0 0 0 1 1 2 3 0 1 1 1 1 2 2 2 2 2 2 3 0 0 0 0 1 2 2 2 2 3 0 1 2 2 3 0 1 2 3 0 1 2 3 0 0 0 1 1 2 2 3 3 0 1 1 1 1 2 2 3 3 0 1 1 1 2 2 2 3 3 3 0 1 1 2 3 3 0 1 2 3 0 0 0 0 1 2 3 0 0 0 0 0 0 1 2 2 3 3 0 0 1 2 3 0 1 2 2 3 0 0 0 1 1 2 2 2 2 2 3 3 3 3 3 0 1 2 2 3 3 3 3 3 0 0 1 1 2 2 3 0 0 1 2 2 3 3 3 0 0 0 1 2 2 2 2 3 3 0 1 2 3 0 0 1 1 1 2 2 3 0 0 1 1 2 2 2 3 3 0 0 1 1 1 1 1 2 3 3 3 0 1 2 2 2 2 3 3 3 3 3 3 0 0 0 0 0 0 1 2 3 0 0 1 1 1 2 3 0 0 1 1 2 2 2 2 3 3 3 0 1 1 2 2 2 3 3 0 0 0 0 0 0 1 2 2 3 3 0 0 0 0 0 0 1 2 3 3 3 0 1 1 1 2 2 2 2 2 3 3 3 0 1 2 2 2 3 3 3 3 0 0 0 0 1 2 3 3 3 3 3 3 0 0 1 1 1 1 2 3 0 1 2 3 0 1 1 2 3 3 3 0 0 0 0 1 1 2 3 3 3 3 0 0 1 1 1 2 2 2 2 2 2 3 3 0 0 0 1 2 3 0 0 1 1 2 2 3 3 3 3 3 0 0 1 2 2 2 2 3 0 0 1 1 1 1 1 2 3 3 0 0 1 1 1 2 3 3 3 0 0");
+        
+            aAnswer = getInputAsMatrix(stdin, "4 4 0.545455 0.454545 0.0 0.0 0.0 0.506173 0.493827 0.0 0.0 0.0 0.504132 0.495868 0.478088 0.0 0.0 0.521912");
+            bAnswer = getInputAsMatrix(stdin, "4 4 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0");
+
+
+
+        } else if (test_mode == 2){
+            
+            aMatrix = getInputAsMatrix(stdin, "4 4 0.2 0.4 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.4 0.2");
+            bMatrix = getInputAsMatrix(stdin, "4 4 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1 0.7");
+            piMatrix = getInputAsMatrix(stdin, "1 4 1.0 0.0 0.0 0.0");
+            obsSequence = getInputAsVector(stdin, "1000 1 0 1 0 2 3 0 1 0 1 2 3 2 0 1 0 3 2 3 2 3 2 1 0 1 0 1 2 3 2 0 2 1 0 1 3 2 3 2 3 2 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 2 3 2 0 1 0 1 2 3 2 3 0 3 2 1 0 3 2 1 2 3 0 1 0 1 2 0 3 0 1 0 3 0 1 2 3 1 2 3 2 1 0 1 0 3 2 3 2 1 2 1 0 2 1 3 2 3 2 3 1 0 1 0 3 2 3 2 0 1 0 2 1 0 1 0 3 1 0 1 0 2 1 0 3 2 3 2 3 2 3 0 1 2 1 0 1 0 1 0 3 2 3 2 0 1 3 2 3 2 3 0 1 0 3 2 3 2 3 0 1 3 2 3 1 0 1 0 3 1 0 1 2 3 0 1 0 3 2 3 0 1 0 1 2 1 0 3 0 1 0 1 3 2 3 1 0 1 2 1 0 3 2 1 0 2 3 1 2 3 2 3 2 3 2 3 0 3 0 1 2 3 2 1 3 2 0 3 2 3 2 3 2 1 0 1 3 0 1 3 2 3 2 0 3 2 3 2 3 2 3 0 1 0 1 2 3 2 3 2 1 0 1 0 3 0 1 0 2 3 0 1 0 1 0 1 2 1 0 1 0 1 3 2 3 2 3 2 3 0 2 1 2 3 2 3 2 0 1 0 1 0 1 0 3 2 3 2 3 0 1 0 1 0 2 3 2 3 2 3 2 3 2 1 0 2 3 2 3 0 1 2 3 2 1 0 1 2 0 3 1 0 1 0 3 0 2 3 1 0 1 2 1 2 3 0 3 0 1 0 3 2 1 0 1 0 3 2 0 1 0 1 2 3 0 3 2 1 0 3 2 0 1 0 1 0 1 0 1 0 1 2 0 1 3 2 3 2 3 0 2 1 0 3 2 1 0 1 0 1 0 2 3 2 1 0 1 0 1 0 1 2 3 0 1 2 0 1 0 1 0 1 0 1 0 3 2 1 0 1 0 1 0 1 2 3 2 3 0 1 0 1 0 3 2 3 2 1 2 1 0 1 0 1 2 3 2 3 2 3 2 3 0 3 0 1 0 3 2 3 2 3 2 1 2 3 2 3 2 3 0 1 3 0 2 1 0 1 0 1 3 0 1 0 1 0 1 0 3 2 3 2 1 0 1 3 1 0 1 0 3 0 1 0 2 3 2 3 2 3 2 3 2 1 2 3 2 3 2 1 0 1 0 1 2 3 2 3 2 1 0 1 2 1 0 1 3 0 3 2 3 2 3 0 1 0 1 2 3 2 1 0 1 0 1 3 2 1 0 3 2 1 0 3 2 3 2 0 1 0 1 2 3 0 2 3 2 3 2 1 0 1 2 3 2 1 0 1 3 2 0 1 2 3 0 2 3 2 3 0 1 0 1 2 3 2 0 1 0 3 2 0 1 0 1 0 1 0 1 0 1 0 1 3 2 3 2 1 2 3 2 1 0 1 0 1 0 1 0 3 0 1 0 1 0 3 0 1 0 1 2 3 0 1 0 3 0 1 0 1 0 1 2 3 0 1 0 3 0 1 0 1 2 3 0 1 0 1 2 1 3 0 1 0 1 0 1 0 3 2 3 2 3 2 1 0 1 0 1 3 0 3 0 1 2 3 1 3 2 3 2 1 3 1 2 1 0 1 0 1 0 2 1 0 1 0 1 2 3 2 1 0 2 3 2 3 2 3 2 3 0 3 2 3 0 1 2 3 2 3 2 3 2 3 1 0 1 0 1 0 1 2 0 3 0 3 2 0 3 2 1 0 1 0 1 0 1 2 3 2 3 2 1 2 3 0 1 0 3 2 0 3 2 0 1 0 1 0 3 0 1 0 1 2 3 2 3 2 1 0 1 0 1 2 3 2 3 2 3 2 1 0 1 0 1 0 3 0 1 2 1 0 3 2 3 2 3 2 0 3 2 3 2 3 0 1 2 3 1 0 1 0 3 2 3 2 1 2 3 0 3 2 3 2 3 2 1 2 3 2 3 2 1 2 3 2 3 2 3 2 1 0 1 0 1 0 3 2 3 0 3 2 3 2 3 0 1 2 1 0 3 0 3 2 3 2 3 2 0 1 2 3 0 1 0 1 2 0 1 0 1 0 1 0 1 3 2 1 0 1 0 1 0 1 0 3 2 3 2 1 0 1 0 1 0 3 2 1 0 1 0 1 0 1 3 2 3 0 3 0 1");
+
+            aAnswer = getInputAsMatrix(stdin, "4 4 0.0 0.694045 0.070896 0.235060 0.684412 0.0 0.228137 0.087451 0.105932 0.271192 0.0 0.622876 0.266083 0.060087 0.673830 0.0");
+            bAnswer = getInputAsMatrix(stdin, "4 4 1.0 0.0 0.0 0.0 0.0 0.999980 0.0 0.000020 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0");
+
+
+        } else if (test_mode == 3){
+            
+            aMatrix = getInputAsMatrix(stdin, "4 4 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1 0.7");
+            bMatrix = getInputAsMatrix(stdin, "4 4 0.4 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.4 0.2 0.2 0.2 0.2 0.4 ");
+            piMatrix = getInputAsMatrix(stdin, "1 4 1.0 0.0 0.0 0.0");
+            obsSequence = getInputAsVector(stdin, "1000 0 0 0 0 2 0 0 0 2 3 3 2 2 3 1 1 2 2 2 2 2 2 2 0 1 1 3 3 3 3 3 3 3 3 2 2 2 2 2 2 2 2 2 2 2 2 2 3 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 3 0 0 0 0 1 3 3 1 2 2 2 2 1 2 2 2 2 0 0 2 1 0 0 1 1 1 1 2 2 2 0 2 1 1 1 1 1 2 2 2 2 2 2 2 1 2 2 2 3 1 1 2 1 1 2 2 2 2 2 1 2 1 1 1 1 1 3 3 3 3 3 3 3 3 2 2 2 2 2 1 2 2 2 3 3 3 3 3 3 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 3 3 2 2 2 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 0 0 2 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 2 1 1 2 1 1 1 1 2 3 2 2 1 1 3 3 1 1 1 1 1 3 1 1 1 2 2 2 2 2 2 2 2 1 1 3 3 3 3 3 3 3 3 3 2 2 2 2 1 1 2 2 2 1 2 3 3 2 2 2 2 1 0 1 1 1 1 2 1 2 1 2 1 1 2 2 1 2 2 2 2 2 2 1 2 2 2 2 2 2 2 0 3 3 0 0 1 1 3 2 2 2 2 2 2 2 2 2 2 2 2 2 3 2 2 2 1 1 3 2 2 2 0 0 1 2 2 3 3 3 3 3 2 1 2 1 2 0 2 2 1 2 2 2 2 2 2 2 2 2 1 2 2 2 2 0 0 0 0 0 2 1 2 2 0 2 2 3 3 3 2 2 2 1 2 2 1 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 0 1 3 1 3 2 2 2 2 2 2 1 2 2 3 2 2 3 2 2 1 1 1 1 1 3 3 3 3 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 1 2 1 2 0 0 1 3 2 3 3 2 3 3 2 2 2 2 2 1 1 1 1 2 1 3 2 2 2 1 0 2 2 2 2 2 1 2 3 1 2 1 1 1 1 1 2 3 2 2 1 3 2 2 2 2 2 2 2 3 1 1 1 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 1 2 2 2 3 2 1 2 2 2 2 2 2 2 2 2 2 2 0 0 0 1 0 0 2 2 2 2 2 2 2 2 3 3 3 1 2 2 2 2 2 2 2 3 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 0 2 1 1 1 1 3 1 3 3 3 3 3 2 2 2 1 2 2 2 3 1 3 3 2 2 2 2 2 2 2 3 3 3 1 1 1 1 1 0 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 0 0 0 1 3 3 3 3 3 1 2 2 2 2 2 2 1 2 3 3 2 1 1 1 3 1 1 1 2 1 2 2 2 2 1 2 2 2 2 2 2 0 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 1 2 0 0 0 3 0 0 2 2 2 2 2 2 2 2 0 1 2 2 1 2 1 1 2 2 2 2 2 2 3 2 2 2 2 2 2 0 0 0 1 2 2 2 2 2 2 2 1 2 2 2 2 3 2 2 2 2 2 2 2 2 2 1 0 1 2 2 1 3 3 3 2 0 0 0 1 1 1 3 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 3 3 2 2 2 2 2 0 0 1 3 3 3 3 3 3 3 2 2 2 3 2 2 2 2 1 2 2 3 3 1 1 1 3 3 3 3 3 2 2 2 2 2 2 2 2 1 3 3 2 0 0 2 2 2 1 1 1 3 2 2 2 2 2 2 2 1 2 1 2 3 3 3 3 2 2 1 1 2 2 2 2 2 2 2 1 3 0 1 2 2 0 3 0 0 0 0 2 3 2 1 3");
+        
+            aAnswer = getInputAsMatrix(stdin, "4 4 0.661425 0.250893 0.087682 0.0 0.0 0.698875 0.140576 0.160550 0.045010 0.026948 0.888408 0.039634 0.0 0.084577 0.293716 0.621707");
+            bAnswer = getInputAsMatrix(stdin, "4 4 0.790017 0.058239 0.061136 0.090608 0.005925 0.764448 0.191994 0.037632 0.003951 0.077912 0.910978 0.007159 0.0 0.0 0.000077 0.999923");
+
+        } else if (test_mode == 4){
+            
+            aMatrix = getInputAsMatrix(stdin, "5 5 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1 0.7 0.7 0.1 0.1 0.1 0.1 0.7 0.1 0.1 0.1 0.1");
+            bMatrix = getInputAsMatrix(stdin, "5 5 0.4 0.2 0.2 0.1 0.1 0.4 0.2 0.2 0.1 0.1 0.4 0.2 0.2 0.1 0.1 0.4 0.2 0.2 0.1 0.1 0.4 0.2 0.2 0.1 0.1");
+            piMatrix = getInputAsMatrix(stdin, "1 5 1.0 0.0 0.0 0.0 0.0 0.0");
+            obsSequence = getInputAsVector(stdin, "1000 0 0 0 0 2 0 0 0 2 3 3 2 2 3 1 1 2 2 2 2 2 2 2 0 1 1 3 3 3 3 3 3 3 3 2 2 2 2 2 2 2 2 2 2 2 2 2 3 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 3 0 0 0 0 1 3 3 1 2 2 2 2 1 2 2 2 2 0 0 2 1 0 0 1 1 1 1 2 2 2 0 2 1 1 1 1 1 2 2 2 2 2 2 2 1 2 2 2 3 1 1 2 1 1 2 2 2 2 2 1 2 1 1 1 1 1 3 3 3 3 3 3 3 3 2 2 2 2 2 1 2 2 2 3 3 3 3 3 3 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 3 3 2 2 2 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 0 0 2 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 2 1 1 2 1 1 1 1 2 3 2 2 1 1 3 3 1 1 1 1 1 3 1 1 1 2 2 2 2 2 2 2 2 1 1 3 3 3 3 3 3 3 3 3 2 2 2 2 1 1 2 2 2 1 2 3 3 2 2 2 2 1 0 1 1 1 1 2 1 2 1 2 1 1 2 2 1 2 2 2 2 2 2 1 2 2 2 2 2 2 2 0 3 3 0 0 1 1 3 2 2 2 2 2 2 2 2 2 2 2 2 2 3 2 2 2 1 1 3 2 2 2 0 0 1 2 2 3 3 3 3 3 2 1 2 1 2 0 2 2 1 2 2 2 2 2 2 2 2 2 1 2 2 2 2 0 0 0 0 0 2 1 2 2 0 2 2 3 3 3 2 2 2 1 2 2 1 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 0 1 3 1 3 2 2 2 2 2 2 1 2 2 3 2 2 3 2 2 1 1 1 1 1 3 3 3 3 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 1 2 1 2 0 0 1 3 2 3 3 2 3 3 2 2 2 2 2 1 1 1 1 2 1 3 2 2 2 1 0 2 2 2 2 2 1 2 3 1 2 1 1 1 1 1 2 3 2 2 1 3 2 2 2 2 2 2 2 3 1 1 1 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 1 2 2 2 3 2 1 2 2 2 2 2 2 2 2 2 2 2 0 0 0 1 0 0 2 2 2 2 2 2 2 2 3 3 3 1 2 2 2 2 2 2 2 3 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 0 2 1 1 1 1 3 1 3 3 3 3 3 2 2 2 1 2 2 2 3 1 3 3 2 2 2 2 2 2 2 3 3 3 1 1 1 1 1 0 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 0 0 0 1 3 3 3 3 3 1 2 2 2 2 2 2 1 2 3 3 2 1 1 1 3 1 1 1 2 1 2 2 2 2 1 2 2 2 2 2 2 0 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 1 2 0 0 0 3 0 0 2 2 2 2 2 2 2 2 0 1 2 2 1 2 1 1 2 2 2 2 2 2 3 2 2 2 2 2 2 0 0 0 1 2 2 2 2 2 2 2 1 2 2 2 2 3 2 2 2 2 2 2 2 2 2 1 0 1 2 2 1 3 3 3 2 0 0 0 1 1 1 3 2 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 3 3 2 2 2 2 2 0 0 1 3 3 3 3 3 3 3 2 2 2 3 2 2 2 2 1 2 2 3 3 1 1 1 3 3 3 3 3 2 2 2 2 2 2 2 2 1 3 3 2 0 0 2 2 2 1 1 1 3 2 2 2 2 2 2 2 1 2 1 2 3 3 3 3 2 2 1 1 2 2 2 2 2 2 2 1 3 0 1 2 2 0 3 0 0 0 0 2 3 2 1 3");
+        
+            aAnswer = getInputAsMatrix(stdin, "4 4 0.661425 0.250893 0.087682 0.0 0.0 0.698875 0.140576 0.160550 0.045010 0.026948 0.888408 0.039634 0.0 0.084577 0.293716 0.621707");
+            bAnswer = getInputAsMatrix(stdin, "4 4 0.790017 0.058239 0.061136 0.090608 0.005925 0.764448 0.191994 0.037632 0.003951 0.077912 0.910978 0.007159 0.0 0.0 0.000077 0.999923");
+
+        } else {
+            aMatrix = getInputAsMatrix(stdin);
+            bMatrix = getInputAsMatrix(stdin);
+            piMatrix = getInputAsMatrix(stdin);
+            obsSequence = getInputAsVector(stdin);
+            aAnswer = getInputAsMatrix(stdin, "4 4 0.545455 0.454545 0.0 0.0 0.0 0.506173 0.493827 0.0 0.0 0.0 0.504132 0.495868 0.478088 0.0 0.0 0.521912");
+            bAnswer = getInputAsMatrix(stdin, "4 4 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0");
+
+            
+        }
+
+
+
         // Used for testing
-        // double[][] aMatrix = getInputAsMatrix(stdin, "4 4 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.1 0.1 0.1 0.0 0.8 0.8 0.1 0.1 0.0");
-        // double[][] bMatrix = getInputAsMatrix(stdin, "4 4 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.0 0.0 0.0 0.9 0.1 0.1 0.0 0.0 0.9");
-        // double[][] piMatrix = getInputAsMatrix(stdin, "1 4 1.0 0.0 0.0 0.0");
-        // int[] obsSequence = getInputAsVector(stdin, "8 0 1 2 3 0 1 2 3");
+        piMatrix = transposeMatrix(piMatrix);
+        HMM hmm = new HMM(aMatrix,bMatrix,piMatrix);
+
+        hmm.baum_welch(obsSequence);
+        
+        
+        //printMatrix(hmm.A);
+        //printMatrix(hmm.B);
+
+        double[][] A_iter = hmm.A;
+        double[][] B_iter = hmm.B;
 
         
-        // Initialize the first alpha as pi_i * bi(O)
-        double[][] alpha = alpha_forward_pass(obsSequence);
-        double[][] beta = beta_backward_pass(obsSequence);
+        for (int i=0;i<A_iter[0].length;i++){
+            for (int j=0;j<A_iter[0].length;j++){
+                A_iter[i][j] = round(A_iter[i][j],7);
+            }
+        }
 
+        for (int t=0;t<B_iter[0].length;t++){
+            for (int i=0;i<transposeMatrix(B_iter)[0].length;i++){
+                B_iter[i][t] = round(B_iter[i][t],7);
+            }
+        }
         
-        double output = sumVector(alpha);
-        System.out.println(round(output,6));
+        printMatrixForKattis(A_iter);
+        
+        printMatrixForKattis(B_iter);
+
+
+    
+
+
+    // Initialize the first alpha as pi_i * bi(O)
+    //double[][] alpha = alpha_forward_pass(obsSequence);
+    //double[][] beta = beta_backward_pass(obsSequence, aMatrix);
+
+    
+    //double output = sumVector(alpha);
+    //System.out.println(round(output,6));
 
 
     }

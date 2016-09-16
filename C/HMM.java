@@ -18,16 +18,19 @@ public class HMM {
     
 
     // constructor
-    public HMM(double[][] aMat,double[][] bMat,double[][] piMat) {
+    public HMM(double[][] aMat,double[][] bMat,double[][] piMat, int iterations) {
         A = aMat;
         B = bMat;
         pi = transposeMatrix(piMat);
-        maxIters = 70;
+        maxIters = iterations;
+    }
+    
+    public HMM(double[][] aMat,double[][] bMat,double[][] piMat) {
+        this(aMat, bMat, piMat, 70);
     }
 
     // calc alpha then calc beta then update().
     public void baum_welch(int[] obsSequence) {
-
         double[][] oldA;
         double[][] oldB;
         double[][] oldPi;

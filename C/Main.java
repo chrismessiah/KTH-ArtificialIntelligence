@@ -246,16 +246,16 @@ public class Main {
         double[][] aAnswer;
         double[][] bAnswer;
 
-        int iterations = 700;
+        int iterations = 1000;
         String filename = "obs10k.in";
-        int amountOfObservationsToUse = 1000;
+        int amountOfObservationsToUse = 3500;
         
         aMatrix = getInputAsMatrix(stdin, "3 3 0.54 0.26 0.20 0.19 0.53 0.28 0.22 0.18 0.6");
         bMatrix = getInputAsMatrix(stdin, "3 4 0.5 0.2 0.11 0.19 0.22 0.28 0.23 0.27 0.19 0.21 0.15 0.45");
         piMatrix = getInputAsMatrix(stdin, "1 3 0.3 0.2 0.5");
-        obsSequence = getInputAsVector(stdin, readTextfromFile(filename));
+        obsSequence = getSubsetVector(getInputAsVector(stdin, readTextfromFile(filename)), amountOfObservationsToUse);
         
-        HMM hmm = new HMM(aMatrix, bMatrix, piMatrix);
+        HMM hmm = new HMM(aMatrix, bMatrix, piMatrix, iterations);
         hmm.baum_welch(obsSequence);
 
         double[][] A_iter = hmm.A;

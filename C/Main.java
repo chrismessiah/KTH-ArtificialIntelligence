@@ -246,13 +246,41 @@ public class Main {
         double[][] aAnswer;
         double[][] bAnswer;
 
-        int iterations = 1000;
+        int iterations = 70;
         String filename = "obs10k.in";
-        int amountOfObservationsToUse = 3500;
+        int amountOfObservationsToUse = 10000;
+        int states = 3;
         
+        
+
+        //baselane
+        piMatrix = getInputAsMatrix(stdin, "1 3 0.3 0.2 0.5");
         aMatrix = getInputAsMatrix(stdin, "3 3 0.54 0.26 0.20 0.19 0.53 0.28 0.22 0.18 0.6");
         bMatrix = getInputAsMatrix(stdin, "3 4 0.5 0.2 0.11 0.19 0.22 0.28 0.23 0.27 0.19 0.21 0.15 0.45");
-        piMatrix = getInputAsMatrix(stdin, "1 3 0.3 0.2 0.5");
+
+        // uniform
+        piMatrix = getInputAsMatrix(stdin, "1 3 0.33333333 0.33333333 0.33333333");
+
+        // diagonal A + 001
+        piMatrix = getInputAsMatrix(stdin, "1 3 0 0 1");
+        aMatrix = getInputAsMatrix(stdin, "3 3 1 0 0 0 1 0 0 0 1");
+        bMatrix = getInputAsMatrix(stdin, "3 4 0.5 0.2 0.11 0.19 0.22 0.28 0.23 0.27 0.19 0.21 0.15 0.45");
+
+        // close to solution
+        aMatrix = getInputAsMatrix(stdin, "3 3 0.75 0.1 0.25 0.12 0.78 0.1 0.22 0.28 0.5");
+        bMatrix = getInputAsMatrix(stdin, "3 4 0.65 0.2 0.11 0.04 0.12 0.44 0.28 0.16 0.05 0.08 0.22 0.64");
+        piMatrix = getInputAsMatrix(stdin, "1 3 0.9 0.05 0.05");
+
+        if (states == 2) {
+            aMatrix = getInputAsMatrix(stdin, "2 2 0.75 0.25 0.37 0.63");
+            bMatrix = getInputAsMatrix(stdin, "2 4 0.5 0.2 0.11 0.19 0.22 0.28 0.23 0.27");
+            piMatrix = getInputAsMatrix(stdin, "1 2 0.3 0.7");
+        } else if(states == 4) {
+            aMatrix = getInputAsMatrix(stdin, "4 4 0.24 0.16 0.10 0.4 0.19 0.23 0.28 0.3 0.22 0.18 0.4 0.2 0.11 0.31 0.41 0.17");
+            bMatrix = getInputAsMatrix(stdin, "4 4 0.3 0.2 0.11 0.39 0.19 0.20 0.38 0.23 0.25 0.15 0.39 0.21 0.21 0.15 0.45 0.19");
+            piMatrix = getInputAsMatrix(stdin, "1 4 0.2 0.15 0.4 0.25");
+        }
+
         obsSequence = getSubsetVector(getInputAsVector(stdin, readTextfromFile(filename)), amountOfObservationsToUse);
         
         HMM hmm = new HMM(aMatrix, bMatrix, piMatrix, iterations);

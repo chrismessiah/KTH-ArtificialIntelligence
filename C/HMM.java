@@ -70,16 +70,14 @@ public class HMM {
 
     // sum all alphas in one sequence to get the probability of the sequence
     public void calcLogProb(int[] obsSequence){
-
         int T = obsSequence.length;
-        double[][] alpha = alpha_forward_pass(obsSequence);
-
+        alpha_forward_pass(obsSequence);
         double logProb = 0;
         for (int t=0;t<T;t++){
-            logProb += Math.log(1./sumVector(transposeMatrix(alpha)[t]));
+            logProb += Math.log(ct_array[t]);
         }
-        System.out.println(Math.pow(Math.E,-logProb));
-        return;
+        //System.out.println(Math.exp(-logProb));
+        System.out.println(-logProb);
     }
 
 

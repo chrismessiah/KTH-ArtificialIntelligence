@@ -20,6 +20,7 @@ public class Player {
             int bestPossible = -99999;
             for (Gamestate childState : nextStates) {
                 v = miniMax(childState);
+        if (gameWinner == gameState.getNextPlayer()) {
                 bestPossible = Math.max(bestPossible, v);
             }
         } else {

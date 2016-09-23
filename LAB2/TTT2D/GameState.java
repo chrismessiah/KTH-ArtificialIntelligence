@@ -241,10 +241,6 @@ public class GameState {
     public final int getNextPlayer() {
       return this.nextPlayer;
     }
-    
-    public final int getCurrentPlayer() {
-        return (this.nextPlayer == Constants.CELL_O) ? Constants.CELL_X : Constants.CELL_O;
-    }
 
     /** Win or Draw for board */
     private int checkLines(int thePlayer) {

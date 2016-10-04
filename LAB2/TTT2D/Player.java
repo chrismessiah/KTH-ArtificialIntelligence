@@ -14,15 +14,23 @@ public class Player {
     // Returns 1, 0 or -1
     // WIN/TIE/LOSE?
     public int gamma(final GameState gameState) {
-        int stateWinner = gameState.getWinner();
+        System.err.println("Run: gamma()");
         int output = -99;
-        if (stateWinner == gameWinner) {
-            output =  1; // correct winner, good state
-        } else if(stateWinner == gameLoser) {
-            output =  -1; // wrong winner, bad state
-        } else {
-            output = 0; // tie
-        }
+        
+        // end of game?
+        // if (gameState.size() == 0) {
+        //     int output = -99;
+        //     if (stateWinner == gameWinner) {
+        //         output =  1; // correct winner, good state
+        //     } else if(stateWinner == gameLoser) {
+        //         output =  -1; // wrong winner, bad state
+        //     } else {
+        //         output = 0; // tie
+        //     }
+        // } else {
+        //     
+        // }
+        output = 1;
         return output;
     }
 
@@ -38,8 +46,13 @@ public class Player {
     // gameState : the current state we are analyzing
     // returns a heuristic value that approximates a utility function of the state
     public int miniMax(final GameState gameState) {
+        System.err.println("\n\n");
         System.err.println("Run: miniMax()");
+        System.err.println("gameState.toString()");
+        System.err.println(gameState.toString(gameState.getNextPlayer()));
+        //System.err.println(gameState.getNextPlayer());
         Vector<GameState> nextStates = mu(gameState);
+        System.err.println(nextStates.size());
         
         // If terminal state
         if (nextStates.size() == 0) {return gamma(gameState);}
@@ -60,6 +73,7 @@ public class Player {
                 bestPossible = Math.min(bestPossible, v);
             }
         }
+        System.err.println("Run: reurn miniMax");
         return bestPossible;
     }
 
@@ -114,7 +128,7 @@ public class Player {
             
         // Must play "pass" move if there are no other moves possible.
         if (nextStates.size() == 0) {return new GameState(gameState, new Move());}
-        
+            
         int outputMove = -99;
         if (gameState.getNextPlayer() == gameLoser) {
             Random random = new Random();

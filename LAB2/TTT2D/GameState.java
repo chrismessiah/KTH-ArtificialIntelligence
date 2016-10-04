@@ -129,6 +129,11 @@ public class GameState {
       this.doMove(move);
     }
 
+    public void shutDown(String errorMessage) {
+        System.out.println(errorMessage);
+        System.exit(0);
+    }
+
     /**
      * Gets whether or not the current move marks the end of the game.
      */
@@ -149,7 +154,23 @@ public class GameState {
     boolean isOWin() {
       return lastMove.isOWin();
     }
-
+    
+    // returns winner: Constants.CELL_X, Constants.CELL_O or -1 for tie
+    public final int getWinner() {
+        int output = -99;
+        if (!isEOG()) {
+            shutDown("Error in getWinner, not EOG!");
+        }
+        if (isXWin()) {
+            output = Constants.CELL_X; // X wins
+        } else if(isOWin()) {
+            output = Constants.CELL_O; // O wins
+        } else {
+            output = -1; // tie
+        }
+        return output;
+    }
+    
     /**
      * Gets the row corresponding to an index in the array representation of
      * the board.
@@ -241,10 +262,10 @@ public class GameState {
     public final int getNextPlayer() {
       return this.nextPlayer;
     }
-    
-    public final int getCurrentPlayer() {
-        return (this.nextPlayer == Constants.CELL_O) ? Constants.CELL_X : Constants.CELL_O;
-    }
+        
+    // public final int getCurrentPlayer() {
+    //     return (this.nextPlayer == Constants.CELL_O) ? Constants.CELL_X : Constants.CELL_O;
+    // }
 
     /** Win or Draw for board */
     private int checkLines(int thePlayer) {

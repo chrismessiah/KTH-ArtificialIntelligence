@@ -2,43 +2,36 @@ import java.util.*;
 
 public class Player {
     
+    // optimize game for X
+    int gameWinner = Constants.CELL_X;
+    int gameLoser = Constants.CELL_O;
+    
     int alpha = -99999;
     int beta = 99999;
-
-    // gameState : the current state we are analyzing
-    // returns a heuristic value that approximates a utility function of the state
-    public int miniMax(final GameState gameState) {
-        Vector<GameState> nextStates = mu(gameState);
-        
-        // If terminal state
-        if (nextStates.size() == 0) { return gamma(gameState); }
-        
-        // Cont. searching
-        int v;
-        if (Constants.CELL_X == GameState.getCurrentPlayer()) {
-            // Player X or A
-            int bestPossible = -99999;
-            for (Gamestate childState : nextStates) {
-                v = miniMax(childState);
-        if (gameWinner == gameState.getNextPlayer()) {
-                bestPossible = Math.max(bestPossible, v);
-            }
-        } else {
-            // Player O or B
-            int bestPossible = 99999;
-            for (Gamestate childState : nextStates) {
-                v = miniMax(childState);
-                bestPossible = Math.min(bestPossible, v);
-            }
-        }
-        return bestPossible;
-    }
 
 
     // Returns how useful the state is to the player
     // Returns 1, 0 or -1
+    // WIN/TIE/LOSE?
     public int gamma(final GameState gameState) {
-        return 1;
+        System.err.println("Run: gamma()");
+        int output = -99;
+        
+        // end of game?
+        // if (gameState.size() == 0) {
+        //     int output = -99;
+        //     if (stateWinner == gameWinner) {
+        //         output =  1; // correct winner, good state
+        //     } else if(stateWinner == gameLoser) {
+        //         output =  -1; // wrong winner, bad state
+        //     } else {
+        //         output = 0; // tie
+        //     }
+        // } else {
+        //     
+        // }
+        output = 1;
+        return output;
     }
 
     // returns all possible states for a player
@@ -50,27 +43,67 @@ public class Player {
         return nextStates;
     }
 
+    // gameState : the current state we are analyzing
+    // returns a heuristic value that approximates a utility function of the state
+    public int miniMax(final GameState gameState) {
+        System.err.println("\n\n");
+        System.err.println("Run: miniMax()");
+        System.err.println("gameState.toString()");
+        System.err.println(gameState.toString(gameState.getNextPlayer()));
+        //System.err.println(gameState.getNextPlayer());
+        Vector<GameState> nextStates = mu(gameState);
+        System.err.println(nextStates.size());
+        
+        // If terminal state
+        if (nextStates.size() == 0) {return gamma(gameState);}
+        
+        // Cont. searching
+        int v;
+        int bestPossible;
+        if (gameWinner == gameState.getNextPlayer()) {
+            bestPossible = -99999; // -infty
+            for (GameState nextState : nextStates) {
+                v = miniMax(nextState);
+                bestPossible = Math.max(bestPossible, v);
+            }
+        } else {
+            bestPossible = 99999; // infty
+            for (GameState nextState : nextStates) {
+                v = miniMax(nextState);
+                bestPossible = Math.min(bestPossible, v);
+            }
+        }
+        System.err.println("Run: reurn miniMax");
+        return bestPossible;
+    }
+
+    public int miniMaxWithAlphaBetaPruning(final GameState gameState, int depth) {
+        return miniMaxWithAlphaBetaPruning(gameState, depth, -99999, 99999);
+    }
+
     // gameState: the current state we are analyzing
     // alpha: the current best value achievable by A
     // beta: the current best value acheivable by B
     // returns the minimax value of the state
-    public int alphaBeta(final GameState gameState, int depth) {
+    public int miniMaxWithAlphaBetaPruning(final GameState gameState, int depth, int alpha, int beta) {
+        Vector<GameState> nextStates = mu(gameState);
+        
+        // reached end of tree
+        if (depth == 0 || mu(gameState).size() == 0) {return gamma(gameState);}
+        
+        // Cont. search
         int v = 0;
-        if (depth == 0 || mu(gameState).size() == 0) {
-            v = gamma(gameState);
-        } else if(Constants.CELL_X == GameState.getCurrentPlayer()) {
-            // Player X or A
+        if(gameWinner == gameState.getNextPlayer()) {
             v = -99999;
-            for (Gamestate childState : nextStates) {
-                v = Math.max(v, alphaBeta(childState, depth-1));
+            for (GameState nextState : nextStates) {
+                v = Math.max(v, miniMaxWithAlphaBetaPruning(nextState, depth-1));
                 alpha = Math.max(alpha, v);
                 if (beta <= alpha) {break;} // beta prune
             }
         } else {
-            // Player O or B
             v = 99999;
-            for (Gamestate childState : nextStates) {
-                v = Math.min(v, alphaBeta(childState, depth-1));
+            for (GameState nextState : nextStates) {
+                v = Math.min(v, miniMaxWithAlphaBetaPruning(nextState, depth-1));
                 beta = Math.min(beta, v);
                 if (beta <= alpha) {break;} // alpha prune
             }
@@ -89,28 +122,30 @@ public class Player {
      * @return the next state the board is in after our move
      */
     public GameState play(final GameState gameState, final Deadline deadline) {
-        Vector<GameState> nextStates = new Vector<GameState>();
-        gameState.findPossibleMoves(nextStates);
-
-        if (nextStates.size() == 0) {
-            // Must play "pass" move if there are no other moves possible.
-            return new GameState(gameState, new Move());
-        }
-
-        int num = minimax(gameState);
-
-        /**
-         * Here you should write your algorithms to get the best next move, i.e.
-         * the best next state. This skeleton returns a random move instead.
-         */
-
-
-        Random random = new Random();
+        System.err.println("Run: Player.play()");
         
+        Vector<GameState> nextStates = mu(gameState);
+            
+        // Must play "pass" move if there are no other moves possible.
+        if (nextStates.size() == 0) {return new GameState(gameState, new Move());}
+            
+        int outputMove = -99;
+        if (gameState.getNextPlayer() == gameLoser) {
+            Random random = new Random();
+            outputMove = random.nextInt(nextStates.size());
+        } else {
+            /**
+             * Here you should write your algorithms to get the best next move, i.e.
+             * the best next state. This skeleton returns a random move instead.
+             */
 
-
-
-        // should return nextStates.elementAt(optimalInteger);
-        return nextStates.elementAt(random.nextInt(nextStates.size()));
+            int heuristicVal = miniMax(gameState);
+            //int heuristicVal = miniMaxWithAlphaBetaPruning(gameState, DEPTH?!?!?);
+            outputMove = heuristicVal;
+            
+            // should store outputMove = optimalMove;
+        }
+        
+        return nextStates.elementAt(outputMove);
     }    
 }

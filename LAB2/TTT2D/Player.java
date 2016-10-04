@@ -38,7 +38,7 @@ public class Player {
     // gameState : the current state we are analyzing
     // returns a heuristic value that approximates a utility function of the state
     public int miniMax(final GameState gameState) {
-        System.out.println("Run: miniMax()");
+        System.err.println("Run: miniMax()");
         Vector<GameState> nextStates = mu(gameState);
         
         // If terminal state
@@ -108,7 +108,7 @@ public class Player {
      * @return the next state the board is in after our move
      */
     public GameState play(final GameState gameState, final Deadline deadline) {
-        System.out.println("Run: Player.play()");
+        System.err.println("Run: Player.play()");
         
         Vector<GameState> nextStates = mu(gameState);
             

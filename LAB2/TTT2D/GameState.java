@@ -1,5 +1,6 @@
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * Represents a game state with a 4x4 board
@@ -130,14 +131,14 @@ public class GameState {
     }
 
     public void shutDown(String errorMessage) {
-        System.out.println(errorMessage);
+        System.err.println(errorMessage);
         System.exit(0);
     }
 
     /**
      * Gets whether or not the current move marks the end of the game.
      */
-    boolean isEOG() {
+    public boolean isEOG() {
       return this.lastMove.isEOG();
     }
 
@@ -156,17 +157,20 @@ public class GameState {
     }
     
     // returns winner: Constants.CELL_X, Constants.CELL_O or -1 for tie
-    public final int getWinner() {
+    public int getWinner() {
         int output = -99;
-        if (!isEOG()) {
-            shutDown("Error in getWinner, not EOG!");
-        }
         if (isXWin()) {
             output = Constants.CELL_X; // X wins
         } else if(isOWin()) {
             output = Constants.CELL_O; // O wins
         } else {
             output = -1; // tie
+        }
+        
+        if (!isEOG()) {
+            shutDown("Error in getWinner, not EOG!");
+        } else if (output == -99) {
+            shutDown("Error in getWinner, output is -99!");
         }
         return output;
     }
@@ -321,6 +325,64 @@ public class GameState {
        
        return ((playerCells == BOARD_SIZE) ? LINE_WIN : LINE_NONE);
     }
+    
+    public int[] getBestLinesForWinning(int player) {
+        int[] importantLine = new int[4];
+        int bestValue = -99999;
+        int tempResult;
+        int[][] combinations = new int[][] {
+            {0, 0, 3, 0},   // C1
+            {0, 1, 3, 1},   // C2
+            {0, 2, 3, 2},   // C3
+            {0, 3, 3, 3},   // C4
+            {0, 0, 0, 3},   // R1
+            {1, 0, 1, 3},   // R2
+            {2, 0, 2, 3},   // R3
+            {3, 0, 3, 3},   // R4
+            {0, 0, 3, 3},   // D1
+            {0, 3, 3, 0}    // D2
+        };
+        for (int[] c : combinations) {
+            tempResult = calculateTempLineResult(player, c[0], c[1], c[2], c[3]);
+            if (bestValue < tempResult) {
+                bestValue = tempResult;
+                importantLine = new int[] {c[0], c[1], c[2], c[3]};
+            } if(bestValue == 100) {break;}
+        }
+        return importantLine;
+    }
+    
+    public int calculateTempLineResult(int player, int[] line) {
+        return calculateTempLineResult(player, line[0], line[1], line[2], line[3]);
+    }
+    
+    public int calculateTempLineResult(int player, int row1, int col1, int row2, int col2) {
+       int dRow = (row2 - row1) / (BOARD_SIZE - 1);
+       int dCol = (col2 - col1) / (BOARD_SIZE - 1);
+       int opponent = (player == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
+       int playerCells = 0, opponentCells = 0, result = 0;
+
+       for (int i = 0; i < BOARD_SIZE; ++i) {
+         if (cells[rowColumnToCell(row1 + dRow * i, col1 + dCol * i)] == player) {
+           playerCells++;
+         }
+         if (cells[rowColumnToCell(row1 + dRow * i, col1 + dCol * i)] == opponent) {
+           opponentCells++;
+         }
+       }
+       
+       if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
+       else if(playerCells == 1) {result = 1;}
+       else if(playerCells == 2) {result = 10;}
+       else if(playerCells == 3) {result = 100;}
+       else if(opponentCells == 1) {result = -1;}
+       else if(opponentCells == 2) {result = -10;}
+       else if(opponentCells == 3) {result = -100;}
+    
+       // 1000 equals 4 in-a-row and should trigger gamma-fn as EOG
+       else if(opponentCells == 4 || playerCells == 4){shutDown("Error in calculateTempLineResult(), should have triggered EOG");}
+       return result;
+    }
 
     /**
     * Checks if the move ends up being a special move (Winning = 1, Draw = 2)
@@ -439,6 +501,10 @@ public class GameState {
   	  if (!lastMove.toMessage().equals(gameState.getMove().toMessage()))
   		  equal = false;
   	  return equal;
+    }
+
+    public String toString() {
+        return toString(Constants.CELL_X);
     }
 
     /**

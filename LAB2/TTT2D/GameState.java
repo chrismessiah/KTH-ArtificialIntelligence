@@ -266,6 +266,10 @@ public class GameState {
     public final int getNextPlayer() {
       return this.nextPlayer;
     }
+    
+    public final int getCurrentPlayer() {
+      return (this.nextPlayer == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
+    }
         
     // public final int getCurrentPlayer() {
     //     return (this.nextPlayer == Constants.CELL_O) ? Constants.CELL_X : Constants.CELL_O;

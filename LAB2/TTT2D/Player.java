@@ -4,15 +4,15 @@ import java.lang.Math;
 import java.util.ArrayList;
 
 public class Player {
-    int minusInfty = -999999;
-    int plusInfty = 999999;
+    int minusInfty = -99999999;
+    int plusInfty = 99999999;
     
     // optimize game for X
     int gameWinner = Constants.CELL_X;
     int gameLoser = Constants.CELL_O;
     
     // important variables 
-    int depth = 4;
+    int depth = 10;
     
     public int getLastPlayer(int player) {
         return (player == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
@@ -52,16 +52,10 @@ public class Player {
        else if(opponentCells == 2) {result = -10;}
        else if(opponentCells == 3) {result = -100;}
        else if(opponentCells == 4) {result = -1000;}
-    
-       // 1000 equals 4 in-a-row and should trigger gamma-fn as EOG
-       else if(opponentCells == 4 || playerCells == 4){shutDown("Error in calculateTempLineResult(), should have triggered EOG");}
        return result;
     }
     
-    public int[] getBestLineForWinning(int player, GameState gameState) {
-        int[] importantLine = new int[4];
-        int bestValue = -99999;
-        int tempResult;
+    public int getBestLineForWinning(int player, GameState gameState) {
         int[][] combinations = new int[][] {
             {0, 0, 3, 3},   // D1
             {0, 3, 3, 0},   // D2
@@ -76,17 +70,23 @@ public class Player {
             {2, 0, 2, 3},   // R3
             {3, 0, 3, 3}    // R4
         };
+        
+        // Method 1: Look for line to win on.   KATTIS-SCORE: 29p with 6 depth
+        //int score = minusInfty;
+        // for (int[] c : combinations) {
+        //     score = Math.max(score, calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState));
+        //     if (score == 1000) {break;}
+        // }
+        
+        // Method 2: Use sums instead.          KATTIS-SCORE: 28p with 10 depth
+        int score = 0;
         for (int[] c : combinations) {
-            tempResult = calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState);
-            if (bestValue < tempResult) {
-                bestValue = tempResult;
-                importantLine = new int[] {c[0], c[1], c[2], c[3]};
-            }
-            
-            if(bestValue == 100) {break;}
+            score += calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState);
         }
-        //System.err.println("importantLine ROW: " + importantLine[0] + "-" + importantLine[2] + "      COLUMN: " + importantLine[1] + "-" + importantLine[3] + "     bestValue: " + bestValue);
-        return importantLine;
+        
+        
+        
+        return score;
     }
     
     public int gamma(GameState gameState) {
@@ -94,12 +94,7 @@ public class Player {
     }
     
     public int gamma(GameState gameState, int depth) {
-        int[] line = getBestLineForWinning(getLastPlayer(gameState), gameState);
-        int output = calculateTempLineResult(getLastPlayer(gameState), line, gameState);
-        //if (gameState.getNextPlayer() == gameLoser) {output = output*-1;}
-        
-        // check if opponent 
-        return output;
+        return getBestLineForWinning(getLastPlayer(gameState), gameState);
     }
     
     // returns all possible states for a player
@@ -123,14 +118,14 @@ public class Player {
         }
         else {
             if(gameWinner == getLastPlayer(gameState)) {
-                v = -999999;
+                v = minusInfty;
                 for (GameState nextState : nextStates) {
                     v = Math.max(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta));
                     alpha = Math.max(alpha, v);
                     if (beta <= alpha) {break;} // beta prune
                 }
             } else {
-                v = 999999;
+                v = plusInfty;
                 for (GameState nextState : nextStates) {
                     v = Math.min(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta));
                     beta = Math.min(alpha, v);
@@ -172,10 +167,8 @@ public class Player {
         Vector<GameState> nextStates = mu(gameState);
         if (nextStates.size() == 0) {return new GameState(gameState, new Move());} // // Must play "pass" move if there are no other moves possible.
         else if (getLastPlayer(gameState) == gameLoser) {
-            //System.err.println("TURN: O");
             outputState = randomMoveFn(nextStates);
         } else {
-            //System.err.println("TURN: X");
             outputState = optimalMoveFn(nextStates);
         }
         return outputState;

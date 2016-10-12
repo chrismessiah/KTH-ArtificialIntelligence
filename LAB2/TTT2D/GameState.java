@@ -267,13 +267,9 @@ public class GameState {
       return this.nextPlayer;
     }
     
-    public final int getCurrentPlayer() {
+    public final int getLastPlayer() {
       return (this.nextPlayer == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
     }
-        
-    // public final int getCurrentPlayer() {
-    //     return (this.nextPlayer == Constants.CELL_O) ? Constants.CELL_X : Constants.CELL_O;
-    // }
 
     /** Win or Draw for board */
     private int checkLines(int thePlayer) {
@@ -335,16 +331,18 @@ public class GameState {
         int bestValue = -99999;
         int tempResult;
         int[][] combinations = new int[][] {
+            {0, 0, 3, 3},   // D1
+            {0, 3, 3, 0},   // D2
+            
             {0, 0, 3, 0},   // C1
             {0, 1, 3, 1},   // C2
             {0, 2, 3, 2},   // C3
             {0, 3, 3, 3},   // C4
+            
             {0, 0, 0, 3},   // R1
             {1, 0, 1, 3},   // R2
             {2, 0, 2, 3},   // R3
-            {3, 0, 3, 3},   // R4
-            {0, 0, 3, 3},   // D1
-            {0, 3, 3, 0}    // D2
+            {3, 0, 3, 3}    // R4
         };
         for (int[] c : combinations) {
             tempResult = calculateTempLineResult(player, c[0], c[1], c[2], c[3]);
@@ -353,6 +351,7 @@ public class GameState {
                 importantLine = new int[] {c[0], c[1], c[2], c[3]};
             } if(bestValue == 100) {break;}
         }
+        //System.err.println("importantLine ROW: " + importantLine[0] + "-" + importantLine[2] + "      COLUMN: " + importantLine[1] + "-" + importantLine[3] + "     bestValue: " + bestValue);
         return importantLine;
     }
     

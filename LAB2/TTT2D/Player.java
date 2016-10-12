@@ -7,6 +7,11 @@ public class Player {
     int gameLoser = Constants.CELL_O;
 
     public int gamma(GameState gameState, int depth) {
+        // System.err.println("");
+        // System.err.println("");
+        // System.err.println("");
+        // System.err.println("INSIDE GAMMA");
+        // System.err.println(gameState.toString());
         int output = -999999;
         
         if (gameState.isEOG()) {
@@ -21,9 +26,11 @@ public class Player {
                 gameState.shutDown("gamma(): is not tie or winner");
             }
         } else {
-            int[] line = gameState.getBestLinesForWinning(gameWinner);
-            output = gameState.calculateTempLineResult(gameWinner, line);
+            int[] line = gameState.getBestLinesForWinning(gameState.getLastPlayer());
+            output = gameState.calculateTempLineResult(gameState.getLastPlayer(), line);
+            if (gameState.getLastPlayer() == gameLoser) {output = output*-1;}
         }
+        System.err.println("Gamma output is: " + output + " Depth is: " + depth);
         return output;
     }
     
@@ -75,32 +82,42 @@ public class Player {
     public int[] miniMaxWithAlphaBetaPruning(final GameState gameState, int depth, int alpha, int beta) {
         // System.err.println("******* RUNNING: miniMaxWithAlphaBetaPruning() *******");
         int output = -999999999;
+        int result = -999999999;
         GameState bestState = new GameState();
         Vector<GameState> nextStates = mu(gameState);
         if (depth == 0 || nextStates.size() == 0) {
             // System.err.println("******* RETURN depth: " + depth + "     nextStates.size(): " + nextStates.size() + " *******");
-            return new int[]{gammaWithoutDepth(gameState),-1};
+            return new int[]{gamma(gameState, depth),-1};
         }
         
-        if(gameWinner == gameState.getCurrentPlayer()) {
+        if(gameWinner == gameState.getLastPlayer()) {
             for (GameState nextState : nextStates) {
                 // System.err.println("gameWinner");
                 // System.err.println(nextState.toString());
-                int result = miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta)[0];
+                System.err.println("Calling minimax at depth: " + depth);
+                result = miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta)[0];
+                System.err.println("Result is: " + result + " Depth is: " + depth);
+                if (result == 100) {
+                    System.err.println("RESULT IS 100");
+                    System.err.println(nextState.toString());
+                    System.err.println("Depth: " + depth);
+                }
                 if (result > alpha) {
                     alpha = result;
+                    //System.err.println("alpha is new: " + alpha);
                     bestState = nextState;
                 }
                 if (beta <= alpha) {break;} // beta prune
             }
             output = alpha;
-        } else if( (gameLoser == gameState.getCurrentPlayer()) ) {
+        } else if( (gameLoser == gameState.getLastPlayer()) ) {
             for (GameState nextState : nextStates) {
                 // System.err.println("gameLoser");
                 // System.err.println(nextState.toString());
-                int result = miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta)[0];
+                result = miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta)[0];
                 if (result < beta) {
                     beta = result;
+                    //System.err.println("beta is new: " + beta);
                     bestState = nextState;
                 }
                 if (beta <= alpha) {break;} // alpha prune
@@ -110,6 +127,9 @@ public class Player {
         // System.err.println("bestState.getMove().toMessage()");
         // System.err.println("bestState.getMove().toMessage()");
         // System.err.println(bestState.toString());
+        // System.err.println("alpha: " + alpha);
+        // System.err.println("beta: " + beta);
+        // System.err.println("Output is: " + output);
         int optimalMove = Integer.parseInt(bestState.getMove().toMessage().split("_")[1]);
         
         if (output == -999999999) {gameState.shutDown("Error in miniMaxWithAlphaBetaPruning() output is -999999999");}
@@ -128,10 +148,11 @@ public class Player {
      */
      public GameState optimalMoveFn(GameState gameState) {
          int heuristicOptimalMove = miniMaxWithAlphaBetaPruning(gameState, 2, -999999, 999999)[1];
-         return new GameState(gameState, new Move(heuristicOptimalMove, gameState.getCurrentPlayer()));
+         return new GameState(gameState, new Move(heuristicOptimalMove, gameState.getLastPlayer()));
      }
      
      public GameState randomMoveFn(Vector<GameState> nextStates) {
+         if (nextStates.elementAt(0).getNextPlayer() != gameLoser) {nextStates.elementAt(0).shutDown("Error in randomMoveFn, not gameLoser");}
          Random random = new Random();
          return nextStates.elementAt(random.nextInt(nextStates.size()));
      }
@@ -144,11 +165,11 @@ public class Player {
         // System.err.println(nextStates.size());
         
         if (nextStates.size() == 0) {return new GameState(gameState, new Move());} // // Must play "pass" move if there are no other moves possible.
-        else if (gameState.getCurrentPlayer() == gameLoser) {
-            // System.err.println("TURN: O");
+        else if (gameState.getLastPlayer() == gameLoser) {
+            System.err.println("TURN: O");
             outputState = randomMoveFn(nextStates);
         } else {
-            // System.err.println("TURN: X");
+            System.err.println("TURN: X");
             outputState = optimalMoveFn(gameState);
         }
         // System.err.println("Printing outputState");

@@ -4,10 +4,15 @@ import java.lang.Math;
 import java.util.ArrayList;
 
 public class Player {
+    int minusInfty = -999999;
+    int plusInfty = 999999;
     
     // optimize game for X
     int gameWinner = Constants.CELL_X;
     int gameLoser = Constants.CELL_O;
+    
+    // important variables 
+    int depth = 4;
     
     public int getLastPlayer(int player) {
         return (player == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
@@ -140,7 +145,7 @@ public class Player {
     public GameState optimalMoveFn(Vector<GameState> nextStates) {
         ArrayList<Integer> heuresticArray = new ArrayList<Integer>();
         for (int i=0; i<nextStates.size(); i++) {
-            heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), 2, -999999, 999999));
+            heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), depth, minusInfty, plusInfty));
         }
         int maxHeurestic = Collections.max(heuresticArray);
         //System.err.println("maxHeurestic is: " + maxHeurestic);

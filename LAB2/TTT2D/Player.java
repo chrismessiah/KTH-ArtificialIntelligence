@@ -9,25 +9,91 @@ public class Player {
     int gameWinner = Constants.CELL_X;
     int gameLoser = Constants.CELL_O;
     
-    public int gamma(GameState gameState, int depth) {
-        int output = -999999;
-        if (gameState.isEOG()) {
-            int stateWinner = gameState.getWinner();
-            if (stateWinner == gameWinner) {
-                output =  1000 - depth; // correct winner, good state
-            } else if(stateWinner == gameLoser) {
-                output =  depth - 1000; // wrong winner, bad state
-            } else if(stateWinner == -1) {
-                output = 0; // tie
-            } else {
-                gameState.shutDown("gamma(): is not tie or winner");
+    public int getLastPlayer(int player) {
+        return (player == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
+    }
+    
+    public int getLastPlayer(GameState gameState) {
+        return getLastPlayer(gameState.getNextPlayer());
+    }
+    
+    public void shutDown(String errorMessage) {
+        System.err.println(errorMessage);
+        System.exit(0);
+    }
+    
+    public int calculateTempLineResult(int player, int[] line, GameState gameState) {
+        return calculateTempLineResult(player, line[0], line[1], line[2], line[3], gameState);
+    }
+    
+    public int calculateTempLineResult(int player, int row1, int col1, int row2, int col2, GameState gameState) {
+       int dRow = (row2 - row1) / (gameState.BOARD_SIZE - 1);
+       int dCol = (col2 - col1) / (gameState.BOARD_SIZE - 1);
+       int opponent = (player == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
+       int playerCells = 0, opponentCells = 0, result = 0, cellContent = 0;
+
+       for (int i = 0; i < gameState.BOARD_SIZE; ++i) {
+         cellContent = gameState.at(row1 + dRow * i, col1 + dCol * i);
+         if (cellContent == player) {playerCells++;}
+         if (cellContent == opponent) {opponentCells++;}
+       }
+       
+       if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
+       else if(playerCells == 1) {result = 1;}
+       else if(playerCells == 2) {result = 10;}
+       else if(playerCells == 3) {result = 100;}
+       else if(playerCells == 4) {result = 1000;}
+       else if(opponentCells == 1) {result = -1;}
+       else if(opponentCells == 2) {result = -10;}
+       else if(opponentCells == 3) {result = -100;}
+       else if(opponentCells == 4) {result = -1000;}
+    
+       // 1000 equals 4 in-a-row and should trigger gamma-fn as EOG
+       else if(opponentCells == 4 || playerCells == 4){shutDown("Error in calculateTempLineResult(), should have triggered EOG");}
+       return result;
+    }
+    
+    public int[] getBestLineForWinning(int player, GameState gameState) {
+        int[] importantLine = new int[4];
+        int bestValue = -99999;
+        int tempResult;
+        int[][] combinations = new int[][] {
+            {0, 0, 3, 3},   // D1
+            {0, 3, 3, 0},   // D2
+            
+            {0, 0, 3, 0},   // C1
+            {0, 1, 3, 1},   // C2
+            {0, 2, 3, 2},   // C3
+            {0, 3, 3, 3},   // C4
+            
+            {0, 0, 0, 3},   // R1
+            {1, 0, 1, 3},   // R2
+            {2, 0, 2, 3},   // R3
+            {3, 0, 3, 3}    // R4
+        };
+        for (int[] c : combinations) {
+            tempResult = calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState);
+            if (bestValue < tempResult) {
+                bestValue = tempResult;
+                importantLine = new int[] {c[0], c[1], c[2], c[3]};
             }
-        } else {
-            int[] line = gameState.getBestLinesForWinning(gameState.getLastPlayer());
-            output = gameState.calculateTempLineResult(gameState.getLastPlayer(), line);
-            if (gameState.getNextPlayer() == gameLoser) {output = output*-1;}
+            
+            if(bestValue == 100) {break;}
         }
-        System.err.println("Gamma output is: " + output + " Depth is: " + depth);
+        //System.err.println("importantLine ROW: " + importantLine[0] + "-" + importantLine[2] + "      COLUMN: " + importantLine[1] + "-" + importantLine[3] + "     bestValue: " + bestValue);
+        return importantLine;
+    }
+    
+    public int gamma(GameState gameState) {
+        return gamma(gameState, 0);
+    }
+    
+    public int gamma(GameState gameState, int depth) {
+        int[] line = getBestLineForWinning(getLastPlayer(gameState), gameState);
+        int output = calculateTempLineResult(getLastPlayer(gameState), line, gameState);
+        //if (gameState.getNextPlayer() == gameLoser) {output = output*-1;}
+        
+        // check if opponent 
         return output;
     }
     
@@ -37,35 +103,7 @@ public class Player {
         gameState.findPossibleMoves(nextStates); // Gives the moves for the current player (whichever that is)
         return nextStates;
     }
-    
-    // gameState : the current state we are analyzing
-    // returns a heuristic value that approximates a utility function of the state
-    // public int miniMax(final GameState gameState) {
-    //     Vector<GameState> nextStates = mu(gameState);
-    //     
-    //     // If terminal state
-    //     if (nextStates.size() == 0) {return gamma(gameState);}
-    //     
-    //     // Cont. searching
-    //     int v;
-    //     int bestPossible;
-    //     if (gameWinner == gameState.getNextPlayer()) {
-    //         bestPossible = -99999; // -infty
-    //         for (GameState nextState : nextStates) {
-    //             v = miniMax(nextState);
-    //             bestPossible = Math.max(bestPossible, v);
-    //         }
-    //     } else {
-    //         bestPossible = 99999; // infty
-    //         for (GameState nextState : nextStates) {
-    //             v = miniMax(nextState);
-    //             bestPossible = Math.min(bestPossible, v);
-    //         }
-    //     }
-    //     return bestPossible;
-    // }
-    
-    
+        
     // gameState: the current state we are analyzing
     // alpha: the current best value achievable by A
     // beta: the current best value acheivable by B
@@ -74,9 +112,12 @@ public class Player {
         int v = 0;
         Vector<GameState> nextStates = mu(gameState);
         
-        if (depth == 0 || nextStates.size() == 0) {v = gamma(gameState, depth);} // terminal state
+        if (depth == 0 || nextStates.size() == 0) { // terminal state
+            v = gamma(gameState);
+            //v = gamma(gameState, depth); // trying to compensate with depth
+        }
         else {
-            if(gameWinner == gameState.getLastPlayer()) {
+            if(gameWinner == getLastPlayer(gameState)) {
                 v = -999999;
                 for (GameState nextState : nextStates) {
                     v = Math.max(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta));
@@ -102,6 +143,7 @@ public class Player {
             heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), 2, -999999, 999999));
         }
         int maxHeurestic = Collections.max(heuresticArray);
+        //System.err.println("maxHeurestic is: " + maxHeurestic);
         int bestStateIndex = heuresticArray.indexOf(maxHeurestic);
         return nextStates.get(bestStateIndex);
     }
@@ -124,11 +166,11 @@ public class Player {
         GameState outputState = new GameState();
         Vector<GameState> nextStates = mu(gameState);
         if (nextStates.size() == 0) {return new GameState(gameState, new Move());} // // Must play "pass" move if there are no other moves possible.
-        else if (gameState.getLastPlayer() == gameLoser) {
-            System.err.println("TURN: O");
+        else if (getLastPlayer(gameState) == gameLoser) {
+            //System.err.println("TURN: O");
             outputState = randomMoveFn(nextStates);
         } else {
-            System.err.println("TURN: X");
+            //System.err.println("TURN: X");
             outputState = optimalMoveFn(nextStates);
         }
         return outputState;

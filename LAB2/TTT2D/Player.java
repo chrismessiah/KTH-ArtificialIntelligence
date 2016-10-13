@@ -27,11 +27,11 @@ public class Player {
         System.exit(0);
     }
     
-    public int calculateTempLineResult(int player, int[] line, GameState gameState, int linePriority) {
-        return calculateTempLineResult(player, line[0], line[1], line[2], line[3], gameState, linePriority);
+    public int calculateTempLineResult(int player, int[] line, GameState gameState) {
+        return calculateTempLineResult(player, line[0], line[1], line[2], line[3], gameState);
     }
     
-    public int calculateTempLineResult(int player, int row1, int col1, int row2, int col2, GameState gameState, int linePriority) {
+    public int calculateTempLineResult(int player, int row1, int col1, int row2, int col2, GameState gameState) {
         int dRow = (row2 - row1) / (gameState.BOARD_SIZE - 1);
         int dCol = (col2 - col1) / (gameState.BOARD_SIZE - 1);
         int opponent = (player == Constants.CELL_X) ? Constants.CELL_O : Constants.CELL_X;
@@ -58,61 +58,51 @@ public class Player {
     
     public int getBestLineForWinning(int player, GameState gameState) {
         int[][] combinations = new int[][] {
-            {0, 0, 3, 3, 3},   // D1 - 3 in priority
-            {0, 3, 3, 0, 3},   // D2 - 3 in priority
+            {0, 0, 3, 3},   // D1
+            {0, 3, 3, 0},   // D2
             
-            {0, 0, 3, 0, 2},   // C1
-            {0, 1, 3, 1, 2},   // C2
-            {0, 2, 3, 2, 2},   // C3
-            {0, 3, 3, 3, 2},   // C4
+            {0, 0, 3, 0},   // C1
+            {0, 1, 3, 1},   // C2
+            {0, 2, 3, 2},   // C3
+            {0, 3, 3, 3},   // C4
             
-            {0, 0, 0, 3, 2},   // R1
-            {1, 0, 1, 3, 2},   // R2
-            {2, 0, 2, 3, 2},   // R3
-            {3, 0, 3, 3, 2}    // R4
+            {0, 0, 0, 3},   // R1
+            {1, 0, 1, 3},   // R2
+            {2, 0, 2, 3},   // R3
+            {3, 0, 3, 3}    // R4
         };
         
-        // Method 1: Look for line to win on.
+        // ************** Method 1: Look for line to win on. **************
         // KATTIS-SCORE: 48p with 4 depth
         // int score = minusInfty;
         // for (int[] c : combinations) {
-        //     score = Math.max(score, calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]));
+        //     score = Math.max(score, calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState));
         //     if (score == 1000) {break;}
         // }
         
-        // Method 2: Use sums instead.
-        // KATTIS-SCORE: 96p with 10 depth
-        int score = 0;
-        for (int[] c : combinations) {
-            score += calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
-        }
-        
-        // Method 3: Like 1 but also check if opponent has won
-        // KATTIS-SCORE: 29p with 6 depth or more
-        // int score = minusInfty, temp = 0;
+        // ************** Method 2: Use sums instead. **************
+        // KATTIS-SCORE: 96p with 4 depth
+        // int score = 0;
         // for (int[] c : combinations) {
-        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
-        //     if (temp == -1000) {return temp;}
-        //     score = Math.max(temp, score);
+        //     score += calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState);
         // }
         
-        // Method 4: Use min instead of max
-        // KATTIS-SCORE: 23p with 6 depth or more
+        // ************** Method 3: Use min instead of max **************
+        // KATTIS-SCORE: 25p with 4
         // int score = minusInfty, temp = 0;
         // for (int[] c : combinations) {
-        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
+        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState);
         //     if (temp == -1000) {return temp;}
         //     score = Math.min(temp, score);
         // }
         
-        // Method 5: Look only for victory
-        // KATTIS-SCORE: 29p with 6 depth or more
-        // int score = minusInfty, temp = 0;
-        // for (int[] c : combinations) {
-        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
-        //     if (temp == -1000 || temp == 1000) {return temp;}
-        // }
-        // score = 0;
+        // ************** Method 5: Look only for victory **************
+        // KATTIS-SCORE: 96p with 4 depth
+        int score = 0, temp = 0;
+        for (int[] c : combinations) {
+            temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState);
+            if (temp == -1000 || temp == 1000) {return temp;}
+        }
         
         
         
@@ -144,11 +134,9 @@ public class Player {
         
         if (depth == 0 || nextStates.size() == 0) { // terminal state
             v = gamma(gameState);
-            //v = gamma(gameState, depth); // trying to compensate with depth
         }
         else {
             if(gameWinner == getLastPlayer(gameState)) {
-            //if(gameWinner == gameState.getNextPlayer()) {
                 v = minusInfty;
                 for (GameState nextState : nextStates) {
                     v = Math.max(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta));
@@ -174,10 +162,8 @@ public class Player {
             heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), depth, minusInfty, plusInfty));
         }
         int maxHeurestic = Collections.max(heuresticArray);
-        System.err.println("maxHeurestic is: " + maxHeurestic);
         int bestStateIndex = heuresticArray.indexOf(maxHeurestic);
         GameState bestState = nextStates.get(bestStateIndex);
-        //System.err.println(bestState.toString(bestState.getNextPlayer()));
         return bestState;
     }
     

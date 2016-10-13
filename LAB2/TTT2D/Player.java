@@ -41,38 +41,16 @@ public class Player {
             cellContent = gameState.at(row1 + dRow * i, col1 + dCol * i);
             if (cellContent == player) {playerCells++;}
             if (cellContent == opponent) {opponentCells++;}
-        }
-           if (linePriority == 2) {
-               if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
-               else if(playerCells == 1) {result = 1;}
-               else if(playerCells == 2) {result = 10;}
-               else if(playerCells == 3) {result = 100;}
-               else if(playerCells == 4) {result = 1000;}
-               else if(opponentCells == 1) {result = -1;}
-               else if(opponentCells == 2) {result = -10;}
-               else if(opponentCells == 3) {result = -100;}
-               else if(opponentCells == 4) {result = -1000;}   
-           } else {
-               if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
-               else if(playerCells == 1) {result = 5;}
-               else if(playerCells == 2) {result = 50;}
-               else if(playerCells == 3) {result = 500;}
-               else if(playerCells == 4) {result = 1000;}
-               else if(opponentCells == 1) {result = -5;}
-               else if(opponentCells == 2) {result = -50;}
-               else if(opponentCells == 3) {result = -500;}
-               else if(opponentCells == 4) {result = -1000;}
-           }
-           
-        // if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
-        // else if(playerCells == 1) {result = 1;}
-        // else if(playerCells == 2) {result = 10;}
-        // else if(playerCells == 3) {result = 100;}
-        // else if(playerCells == 4) {result = 1000;}
-        // else if(opponentCells == 1) {result = -1;}
-        // else if(opponentCells == 2) {result = -10;}
-        // else if(opponentCells == 3) {result = -100;}
-        // else if(opponentCells == 4) {result = -1000;}   
+        }           
+        if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
+        else if(playerCells == 1) {result = 1;}
+        else if(playerCells == 2) {result = 10;}
+        else if(playerCells == 3) {result = 100;}
+        else if(playerCells == 4) {result = 1000;}
+        else if(opponentCells == 1) {result = -1;}
+        else if(opponentCells == 2) {result = -10;}
+        else if(opponentCells == 3) {result = -100;}
+        else if(opponentCells == 4) {result = -1000;}   
         
         
         return result;
@@ -95,26 +73,25 @@ public class Player {
         };
         
         // Method 1: Look for line to win on.
-        // KATTIS-SCORE: 29p with 6 depth (but gets lower score if going deeper)
-        int score = minusInfty;
-        for (int[] c : combinations) {
-            //score = Math.max(score, calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState, c[4]));
-            score = Math.max(score, calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]));
-            if (score == 1000) {break;}
-        }
+        // KATTIS-SCORE: 48p with 4 depth
+        // int score = minusInfty;
+        // for (int[] c : combinations) {
+        //     score = Math.max(score, calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]));
+        //     if (score == 1000) {break;}
+        // }
         
         // Method 2: Use sums instead.
-        // KATTIS-SCORE: 28p with 10 depth
-        // int score = 0;
-        // for (int[] c : combinations) {
-        //     score += calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState, c[4]);
-        // }
+        // KATTIS-SCORE: 96p with 10 depth
+        int score = 0;
+        for (int[] c : combinations) {
+            score += calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
+        }
         
         // Method 3: Like 1 but also check if opponent has won
         // KATTIS-SCORE: 29p with 6 depth or more
         // int score = minusInfty, temp = 0;
         // for (int[] c : combinations) {
-        //     temp = calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState, c[4]);
+        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
         //     if (temp == -1000) {return temp;}
         //     score = Math.max(temp, score);
         // }
@@ -123,7 +100,7 @@ public class Player {
         // KATTIS-SCORE: 23p with 6 depth or more
         // int score = minusInfty, temp = 0;
         // for (int[] c : combinations) {
-        //     temp = calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState, c[4]);
+        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
         //     if (temp == -1000) {return temp;}
         //     score = Math.min(temp, score);
         // }
@@ -132,7 +109,7 @@ public class Player {
         // KATTIS-SCORE: 29p with 6 depth or more
         // int score = minusInfty, temp = 0;
         // for (int[] c : combinations) {
-        //     temp = calculateTempLineResult(player, c[0], c[1], c[2], c[3], gameState, c[4]);
+        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], gameState, c[4]);
         //     if (temp == -1000 || temp == 1000) {return temp;}
         // }
         // score = 0;

@@ -4,6 +4,19 @@ import java.lang.Math;
 import java.util.ArrayList;
 
 public class Player {
+    
+    // *********** KATTIS-SCORES ***********
+    //  NO eval                     depth 1         66p                 9 sec
+    //  NO eval                     depth 2         91p                 34 sec
+    //
+    //  eval        method 1        depth 1         76p                 10 sec
+    //  eval        method 1        depth 2                            +50 sec
+    //
+    //  eval        method 2        depth 1         89p                 10 sec
+    //  eval        method 2        depth 2                             +50 sec
+    // 
+    
+    
     int minusInfty = -99999999;
     int plusInfty = 99999999;
     
@@ -85,59 +98,43 @@ public class Player {
         combinations.add(new int[]  {3, 3, 0, 0, 0, 3}  );
         
         // ************** Method 1: Look for line to win on. **************
-        // KATTIS-SCORE: 48p with 4 depth
         // int score = minusInfty;
         // for (int i=0; i<combinations.size(); i++) {
-        //int[] c = combinations.get(i);
+        // int[] c = combinations.get(i);
         //     score = Math.max(score, calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState));
-        //     if (score == 1000) {break;}
+        //     if (score == 1000 || score == -1000) {break;}
         // }
         
         // ************** Method 2: Use sums instead. **************
-        // KATTIS-SCORE: 96p with 4 depth
-        // int score = 0;
-        // for (int i=0; i<combinations.size(); i++) {
-        //int[] c = combinations.get(i);
-        //     score += calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState);
-        // }
-        
-        // ************** Method 3: Use min instead of max **************
-        // KATTIS-SCORE: 25p with 4
-        // int score = minusInfty, temp = 0;
-        // for (int i=0; i<combinations.size(); i++) {
-        //int[] c = combinations.get(i);
-        //     temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState);
-        //     if (temp == -1000) {return temp;}
-        //     score = Math.min(temp, score);
-        // }
-        
-        // ************** Method 5: Look only for victory **************
-        // KATTIS-SCORE: 96p with 4 depth
         int score = 0, temp = 0;
         for (int i=0; i<combinations.size(); i++) {
-            int[] c = combinations.get(i);
+        int[] c = combinations.get(i);
             temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState);
-            if (temp == -1000 || temp == 1000) {return temp;}
-        }
-        
+            score += temp;
+            if (temp == 1000 || temp == -1000) {return temp;}
+            if (i > 15) {break;}
+        } 
         
         
         return score;
     }
     
-    public int gamma(GameState gameState) {
-        return gamma(gameState, 0);
+    public int gamma(GameState gameState, Boolean makeEvaluation) {
+        return gamma(gameState, 0, makeEvaluation);
     }
     
-    public int gamma(GameState gameState, int depth) {
+    public int gamma(GameState gameState, int depth, Boolean makeEvaluation) {
+        // without evaluation: 91p
         Move lastMove = gameState.getMove();
         if (lastMove.isXWin()) {
             return 1000;
         } else if (lastMove.isOWin()) {
             return -1000;
         }
+        if (makeEvaluation) {
+            return getBestLineForWinning(getLastPlayer(gameState), gameState);
+        }
         return 0;
-        //return getBestLineForWinning(getLastPlayer(gameState), gameState);
     }
     
     // returns all possible states for a player
@@ -151,25 +148,25 @@ public class Player {
     // alpha: the current best value achievable by A
     // beta: the current best value acheivable by B
     // returns the minimax value of the state
-    public int miniMaxWithAlphaBetaPruning(final GameState gameState, int depth, int alpha, int beta) {
+    public int miniMaxWithAlphaBetaPruning(final GameState gameState, int depth, int alpha, int beta, Boolean makeEvaluation) {
         int v = 0;
         Vector<GameState> nextStates = mu(gameState);
         
         if (depth == 0 || nextStates.size() == 0) { // terminal state
-            v = gamma(gameState);
+            v = gamma(gameState, makeEvaluation);
         }
         else {
             if(gameWinner == getLastPlayer(gameState)) {
                 v = minusInfty;
                 for (GameState nextState : nextStates) {
-                    v = Math.max(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta));
+                    v = Math.max(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta, makeEvaluation));
                     alpha = Math.max(alpha, v);
                     if (beta <= alpha) {break;} // beta prune
                 }
             } else {
                 v = plusInfty;
                 for (GameState nextState : nextStates) {
-                    v = Math.min(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta));
+                    v = Math.min(v, miniMaxWithAlphaBetaPruning(nextState, depth-1, alpha, beta, makeEvaluation));
                     beta = Math.min(beta, v);
                     if (beta <= alpha) {break;} // alpha prune
                 }
@@ -182,7 +179,7 @@ public class Player {
     public GameState optimalMoveFn(Vector<GameState> nextStates) {
         ArrayList<Integer> heuresticArray = new ArrayList<Integer>();
         for (int i=0; i<nextStates.size(); i++) {
-            heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), depth, minusInfty, plusInfty));
+            heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), depth, minusInfty, plusInfty, true));
         }
         int maxHeurestic = Collections.max(heuresticArray);
         int bestStateIndex = heuresticArray.indexOf(maxHeurestic);

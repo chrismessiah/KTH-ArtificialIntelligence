@@ -10,10 +10,15 @@ public class Player {
     //  NO eval                     depth 2         91p                 34 sec
     //
     //  eval        method 1        depth 1         91p                 10 sec
-    //  eval        method 1        depth 2                            +50 sec
+    //  eval        method 1        depth 2         91p                 41 sec
     //
     //  eval        method 2        depth 1         92p                 10 sec
     //  eval        method 2        depth 2                             +50 sec
+    // 
+    
+    // *********** KATTIS-SCORES for semi-depth ***********
+    //  method 2        depth 1 (1/2)      depth 2(1/2)       96p       39 sec
+    //  method 2        depth 1 (1/3)      depth 2(2/3)       96p       48 sec
     // 
     
     
@@ -28,7 +33,7 @@ public class Player {
     // important variables 
     int depth = 2;
     int useMethod = 2;
-    int divisor = 2;
+    int divisor = 3; // the 1/x part that will use depth -1
     
     public Player() {
         combinations = new ArrayList<int[]>();
@@ -132,7 +137,7 @@ public class Player {
             int[] c = combinations.get(i);
                 temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState);
                 score += temp;
-                if (temp == 1000 || temp == -1000) {return temp;}
+                if (temp == 1000 || temp == -1000) {return 100000;}
             }
         }
             

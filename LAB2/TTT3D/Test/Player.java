@@ -4,19 +4,7 @@ import java.lang.Math;
 import java.util.ArrayList;
 
 public class Player {
-    
-    // *********** KATTIS-SCORES ***********
-    //  NO eval                     depth 1         66p                 9 sec
-    //  NO eval                     depth 2         91p                 34 sec
-    //
-    //  eval        method 1        depth 1         76p                 10 sec
-    //  eval        method 1        depth 2                            +50 sec
-    //
-    //  eval        method 2        depth 1         92p                 10 sec
-    //  eval        method 2        depth 2                             +50 sec
-    // 
-    
-    
+        
     int minusInfty = -99999999;
     int plusInfty = 99999999;
     

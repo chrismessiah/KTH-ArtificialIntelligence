@@ -32,8 +32,8 @@ public class Player {
     
     // important variables 
     int depth = 2;
-    int useMethod = 2;
-    int divisor = 3; // the 1/x part that will use depth -1
+    int useMethod = 3;
+    int divisor = 4; // the 1/x part that will use depth -1
     
     public Player() {
         combinations = new ArrayList<int[]>();
@@ -103,16 +103,12 @@ public class Player {
             cellContent = gameState.at(row1 + dRow * i, col1 + dCol * i, layer1 + dLayer * i);
             if (cellContent == player) {playerCells++;}
             if (cellContent == opponent) {opponentCells++;}
-        }           
-        if (playerCells > 0 && opponentCells > 0) {result = 0;} // nobody can win on this line
-        else if(playerCells == 1) {result = 1;}
-        else if(playerCells == 2) {result = 10;}
-        else if(playerCells == 3) {result = 100;}
-        else if(playerCells == 4) {result = 1000;}
-        else if(opponentCells == 1) {result = -1;}
-        else if(opponentCells == 2) {result = -10;}
-        else if(opponentCells == 3) {result = -100;}
-        else if(opponentCells == 4) {result = -1000;}   
+        }    
+        int totalCells = playerCells + opponentCells;
+        if (playerCells > 0 && opponentCells > 0) {return 0;} // nobody can win on this line
+        else if(totalCells == 2) {result = 5;}
+        else if(totalCells == 3) {result = 500;}
+        if (opponentCells > 0) {result = result*-1;}
         
         
         return result;
@@ -124,21 +120,35 @@ public class Player {
         // ************** Method 1: Look for line to win on. **************
         if (useMethod == 1) {
             for (int i=0; i<combinations.size(); i++) {
-            int[] c = combinations.get(i);
+                int[] c = combinations.get(i);
                 score = Math.max(score, calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState));
                 if (score == 1000 || score == -1000) {break;}
             }
         }
         
         // ************** Method 2: Use sums instead. **************
-        else {
+        else if (useMethod == 2) {
             int temp = 0;
             for (int i=0; i<combinations.size(); i++) {
-            int[] c = combinations.get(i);
+                int[] c = combinations.get(i);
                 temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState);
                 score += temp;
-                if (temp == 1000 || temp == -1000) {return 100000;}
             }
+        }
+        
+        // ************** Method 3: Amunds tip. **************
+        else {
+          int temp = 0;
+          Boolean hasThreeInARow = false;
+          for (int i=0; i<combinations.size(); i++) {
+          int[] c = combinations.get(i);
+              temp = calculateTempLineResult(gameWinner, c[0], c[1], c[2], c[3], c[4], c[5], gameState);
+              score += temp;
+              if (temp == 9) {
+                  if (hasThreeInARow) {return 999999;}
+                  hasThreeInARow = true;
+              }
+          }
         }
             
         return score;
@@ -151,9 +161,9 @@ public class Player {
     public int gamma(GameState gameState, int depth, Boolean useEval) {
         Move lastMove = gameState.getMove();
         if (lastMove.isXWin()) {
-            return 1000;
+            return 9999999;
         } else if (lastMove.isOWin()) {
-            return -1000;
+            return -9999999;
         }
         if (useEval) {return getBestLineForWinning(getLastPlayer(gameState), gameState);}
         return 0;
@@ -201,16 +211,20 @@ public class Player {
     public GameState optimalMoveFn(Vector<GameState> nextStates) {
         ArrayList<Integer> heuresticArray = new ArrayList<Integer>();
         int limit = (nextStates.size()/divisor);
+        int maxHeurestic, bestStateIndex;
+        
+        
         
         for (int i=0; i<limit; i++) {
             heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), depth-1, minusInfty, plusInfty, true));
         }
         for (int i=limit; i<nextStates.size(); i++) {
             heuresticArray.add(miniMaxWithAlphaBetaPruning(nextStates.get(i), depth, minusInfty, plusInfty, true));
-        }
+        }    
         
-        int maxHeurestic = Collections.max(heuresticArray);
-        int bestStateIndex = heuresticArray.indexOf(maxHeurestic);
+        
+        maxHeurestic = Collections.max(heuresticArray);
+        bestStateIndex = heuresticArray.indexOf(maxHeurestic);
         GameState bestState = nextStates.get(bestStateIndex);
         return bestState;
     }
